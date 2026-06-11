@@ -118,6 +118,8 @@
         <h2>金刚般若<small>内容管理系统</small></h2>
         <a href="/admin/dashboard.html" class="nav-item active"><i class="fas fa-home"></i> 控制台</a>
         <a href="/admin/articles.html" class="nav-item"><i class="fas fa-book"></i> 文章管理</a>
+        <a href="/admin/knowledge.html" class="nav-item"><i class="fas fa-database"></i> 知识库</a>
+        <a href="/admin/ai_writer.html" class="nav-item"><i class="fas fa-robot"></i> AI 发文</a>
         <a href="/admin/comments.html" class="nav-item"><i class="fas fa-comments"></i> 评论管理</a>
         <a href="#" class="nav-item logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> 退出登录</a>
     </div>
@@ -126,7 +128,7 @@
         <div class="stats">
             <div class="stat-card"><div class="number" id="statArticles">-</div><div class="label">文章总数</div></div>
             <div class="stat-card"><div class="number" id="statComments">-</div><div class="label">评论总数</div></div>
-            <div class="stat-card"><div class="number" id="statUnreplied">-</div><div class="label">待回复</div></div>
+            <div class="stat-card"><div class="number" id="statUnreplied">-</div><div class="label">待回复</div></div><div class="stat-card"><div class="number" id="statKnowledge">-</div><div class="label">知识素材</div></div><div class="stat-card"><div class="number" id="statTasks">-</div><div class="label">待发任务</div></div>
         </div>
         <h1 style="margin-top:48px">⚡ 快捷操作</h1>
         <div class="quick-links">
@@ -147,6 +149,8 @@
                 document.getElementById('statArticles').textContent = data.articles;
                 document.getElementById('statComments').textContent = data.comments;
                 document.getElementById('statUnreplied').textContent = data.unreplied;
+                document.getElementById('statKnowledge').textContent = data.knowledge || 0;
+                document.getElementById('statTasks').textContent = data.pending_tasks || 0;
             } catch { window.location.href = '/admin/index.html'; }
         }
         async function logout() {
