@@ -13,6 +13,14 @@ def get_db():
 
 def init_db():
     os.makedirs(DB_DIR, exist_ok=True)
+    try:
+        _init_db_inner()
+    except sqlite3.DatabaseError:
+        # 数据库损坏，删掉重建
+        os.remove(DB_PATH)
+        _init_db_inner()
+
+def _init_db_inner():
     conn = get_db()
     cursor = conn.cursor()
     
