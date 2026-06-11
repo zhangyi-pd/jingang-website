@@ -11,6 +11,8 @@ def get_db():
     conn.row_factory = sqlite3.Row
     return conn
 
+import knowledge_search
+
 def init_db():
     os.makedirs(DB_DIR, exist_ok=True)
     try:
