@@ -30,7 +30,8 @@ def _init_db_inner():
             summary TEXT NOT NULL DEFAULT '',
             content TEXT NOT NULL DEFAULT '',
             date TEXT NOT NULL,
-            published INTEGER NOT NULL DEFAULT 1
+            published INTEGER NOT NULL DEFAULT 1,
+            status TEXT NOT NULL DEFAULT 'published'
         );
         
         CREATE TABLE IF NOT EXISTS comments (
@@ -49,42 +50,55 @@ def _init_db_inner():
             username TEXT NOT NULL UNIQUE,
             password TEXT NOT NULL
         );
+        
+        CREATE TABLE IF NOT EXISTS knowledge (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            content TEXT NOT NULL,
+            source TEXT NOT NULL DEFAULT 'text',
+            created_at TEXT NOT NULL
+        );
+        
+        CREATE TABLE IF NOT EXISTS publish_tasks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            topic TEXT NOT NULL,
+            title TEXT DEFAULT '',
+            content TEXT DEFAULT '',
+            summary TEXT DEFAULT '',
+            status TEXT NOT NULL DEFAULT 'pending',
+            publish_at TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            published_at TEXT DEFAULT ''
+        );
     """)
     
-    # 兼容旧数据库：如果 ai_reply 字段不存在就加上
+    # 兼容旧数据库
+    for col in ['ai_reply', 'status']:
+        try:
+            cursor.execute(f"ALTER TABLE comments ADD COLUMN {col} TEXT DEFAULT ''")
+        except sqlite3.OperationalError:
+            pass
     try:
-        cursor.execute("ALTER TABLE comments ADD COLUMN ai_reply TEXT DEFAULT ''")
+        cursor.execute("ALTER TABLE articles ADD COLUMN status TEXT NOT NULL DEFAULT 'published'")
     except sqlite3.OperationalError:
-        pass  # 字段已存在
+        pass
     
     cursor.execute("SELECT COUNT(*) FROM admin")
     if cursor.fetchone()[0] == 0:
-        cursor.execute(
-            "INSERT INTO admin (username, password) VALUES (?, ?)",
-            ("admin", "admin123")
-        )
+        cursor.execute("INSERT INTO admin (username, password) VALUES (?, ?)", ("admin", "admin123"))
     
-    cursor.execute("SELECT COUNT(*) FROM articles")
+    cursor.execute("SELECT COUNT(*) FROM articles WHERE published=1")
     if cursor.fetchone()[0] == 0:
         sample = [
-            ("初读《金刚经》的感悟",
-             "初遇《金刚经》，被降伏其心四字深深触动...",
-             "<p>第一次捧起《金刚经》，心中满是敬畏。善男子、善女人，发阿耨多罗三藐三菩提心，应如是住，如是降伏其心。</p><p>读到这里，我问自己：我的心，真的安住了吗？</p><p>生活在喧嚣中，我们的心常常被外境所转。工作上的得失、人际间的纷扰，无时无刻不在扰动这颗心。而佛陀一开始就告诉我们：应如是住，如是降伏其心。</p><p>不需要刻意求静，不需要远离尘世，就在当下，就在此时，观照自心。</p>",
-             "2025-03-15"),
-            ("应无所住而生其心的体会",
-             "在生活中体会应无所住的妙用...",
-             "<p>应无所住而生其心——这七个字，我反复品味了很久。</p><p>什么是无所住？不执着。不执着于过去的烦恼，不执着于未来的期待，也不执着于当下的境界。</p><p>生活中，当遇到不如意事，我们习惯性地住在为什么是我的抱怨中；当遇到顺心事，我们住在希望一直这样的贪求里。这不正是有所住吗？</p><p>而生其心——不是没有心，而是生清净心，生慈悲心，生智慧心。</p>",
-             "2025-04-02"),
-            ("共修的力量",
-             "一个人走得快，一群人走得远...",
-             "<p>学佛的路上，既需要独处的静修，也需要同修的砥砺。</p><p>一个人诵经时，容易懈怠；一群人共修时，互相策励。一个人读经时，理解可能偏颇；有人讨论时，更能开阔见地。</p><p>愿以此网站为缘，与有缘同修共同精进，在般若智慧的光明中，互相照亮，共证菩提。</p>",
-             "2025-05-01")
+            ("初读《金刚经》的感悟", "初遇《金刚经》，被降伏其心四字深深触动...",
+             "<p>第一次捧起《金刚经》，心中满是敬畏。善男子、善女人，发阿耨多罗三藐三菩提心，应如是住，如是降伏其心。</p><p>读到这里，我问自己：我的心，真的安住了吗？</p><p>生活在喧嚣中，我们的心常常被外境所转。而佛陀一开始就告诉我们：应如是住，如是降伏其心。</p><p>不需要刻意求静，不需要远离尘世，就在当下，就在此时，观照自心。</p>", "2025-03-15"),
+            ("应无所住而生其心的体会", "在生活中体会应无所住的妙用...",
+             "<p>应无所住而生其心——这七个字，我反复品味了很久。</p><p>什么是无所住？不执着。不执着于过去的烦恼，不执着于未来的期待，也不执着于当下的境界。</p><p>生活中，当遇到不如意事，我们习惯性地住在为什么是我的抱怨中；当遇到顺心事，我们住在希望一直这样的贪求里。</p><p>而生其心——不是没有心，而是生清净心，生慈悲心，生智慧心。</p>", "2025-04-02"),
+            ("共修的力量", "一个人走得快，一群人走得远...",
+             "<p>学佛的路上，既需要独处的静修，也需要同修的砥砺。</p><p>一个人诵经时，容易懈怠；一群人共修时，互相策励。一个人读经时，理解可能偏颇；有人讨论时，更能开阔见地。</p><p>愿以此网站为缘，与有缘同修共同精进，在般若智慧的光明中，互相照亮，共证菩提。</p>", "2025-05-01")
         ]
-        for title, summary, content, date in sample:
-            cursor.execute(
-                "INSERT INTO articles (title, summary, content, date, published) VALUES (?, ?, ?, ?, 1)",
-                (title, summary, content, date)
-            )
+        for t, s, c, d in sample:
+            cursor.execute("INSERT INTO articles (title, summary, content, date, published) VALUES (?, ?, ?, ?, 1)", (t, s, c, d))
     
     conn.commit()
     conn.close()
