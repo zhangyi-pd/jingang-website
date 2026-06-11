@@ -1,17 +1,17 @@
 ﻿import os
 import sys
-import json
 from datetime import datetime
 from pathlib import Path
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
 from pydantic import BaseModel
+import threading
 
 sys.path.insert(0, os.path.dirname(__file__))
 import database
+import deepseek
 
 app = FastAPI(title="金刚般若后台")
 
@@ -72,6 +72,8 @@ def logout():
     resp.delete_cookie("session")
     return resp
 
+# ========== 文章接口 ==========
+
 @app.get("/api/articles")
 def list_articles(published_only: bool = True):
     conn = database.get_db()
@@ -126,6 +128,8 @@ def delete_article(article_id: int, request: Request):
     conn.close()
     return {"ok": True}
 
+# ========== 评论接口 ==========
+
 @app.get("/api/comments/{article_id}")
 def list_comments(article_id: int):
     conn = database.get_db()
@@ -150,13 +154,80 @@ def list_all_comments(request: Request):
 def create_comment(data: CommentIn):
     conn = database.get_db()
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
-    conn.execute(
+    cursor = conn.execute(
         "INSERT INTO comments (article_id, author, content, created_at) VALUES (?, ?, ?, ?)",
         (data.article_id, data.author, data.content, now)
     )
+    comment_id = cursor.lastrowid
+    conn.commit()
+    
+    # 异步生成 AI 回复
+    thread = threading.Thread(target=_generate_ai_reply, args=(comment_id, data.article_id, data.content))
+    thread.start()
+    
+    conn.close()
+    return {"ok": True, "id": comment_id}
+
+def _generate_ai_reply(comment_id, article_id, comment_content):
+    """后台异步调用 AI 生成回复"""
+    try:
+        conn = database.get_db()
+        article = conn.execute("SELECT * FROM articles WHERE id=?", (article_id,)).fetchone()
+        comment = conn.execute("SELECT * FROM comments WHERE id=?", (comment_id,)).fetchone()
+        if not article or not comment:
+            conn.close()
+            return
+        ai_reply = deepseek.generate_reply(
+            article["title"], article["content"],
+            comment["author"], comment["content"]
+        )
+        conn.execute("UPDATE comments SET ai_reply=? WHERE id=?", (ai_reply, comment_id))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        pass  # AI 生成失败不影响主流程
+
+@app.post("/api/comments/{comment_id}/accept-ai")
+def accept_ai_reply(comment_id: int, request: Request):
+    """管理员接受 AI 回复"""
+    check_auth(request)
+    conn = database.get_db()
+    comment = conn.execute("SELECT * FROM comments WHERE id=?", (comment_id,)).fetchone()
+    if not comment:
+        conn.close()
+        raise HTTPException(status_code=404, detail="评论不存在")
+    conn.execute("UPDATE comments SET reply=ai_reply WHERE id=?", (comment_id,))
     conn.commit()
     conn.close()
     return {"ok": True}
+
+@app.post("/api/comments/{comment_id}/regen-ai")
+def regenerate_ai_reply(comment_id: int, request: Request):
+    """重新生成 AI 回复"""
+    check_auth(request)
+    conn = database.get_db()
+    comment = conn.execute("SELECT * FROM comments WHERE id=?", (comment_id,)).fetchone()
+    article = conn.execute("SELECT * FROM articles WHERE id=?", (comment["article_id"],)).fetchone()
+    conn.close()
+    if not comment or not article:
+        raise HTTPException(status_code=404, detail="评论或文章不存在")
+    
+    thread = threading.Thread(target=_regen_ai_reply, args=(comment_id, article, comment))
+    thread.start()
+    return {"ok": True}
+
+def _regen_ai_reply(comment_id, article, comment):
+    try:
+        ai_reply = deepseek.generate_reply(
+            article["title"], article["content"],
+            comment["author"], comment["content"]
+        )
+        conn = database.get_db()
+        conn.execute("UPDATE comments SET ai_reply=? WHERE id=?", (ai_reply, comment_id))
+        conn.commit()
+        conn.close()
+    except:
+        pass
 
 @app.put("/api/comments/{comment_id}/reply")
 def reply_comment(comment_id: int, data: ReplyIn, request: Request):
@@ -175,6 +246,8 @@ def delete_comment(comment_id: int, request: Request):
     conn.commit()
     conn.close()
     return {"ok": True}
+
+# ========== 网站统计 ==========
 
 @app.get("/api/stats")
 def get_stats(request: Request):
