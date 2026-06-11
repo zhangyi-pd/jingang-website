@@ -1,5 +1,7 @@
 ﻿import os
 import sys
+import json
+import io
 from datetime import datetime
 from pathlib import Path
 from fastapi import FastAPI, HTTPException, Request, UploadFile, File, Form
@@ -17,9 +19,7 @@ import ai_writer
 import scheduler
 
 app = FastAPI(title="金刚般若后台")
-
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
-
 BASE_DIR = Path(__file__).parent.parent
 
 @app.on_event("startup")
@@ -29,29 +29,22 @@ def startup():
 
 app.mount("/admin", StaticFiles(directory=str(BASE_DIR / "admin"), html=True), name="admin")
 
-# ========== 数据模型 ==========
-class ArticleIn(BaseModel):
-    title: str; summary: str; content: str
-class CommentIn(BaseModel):
-    article_id: int; author: str; content: str
-class ReplyIn(BaseModel):
-    reply: str
-class LoginIn(BaseModel):
-    username: str; password: str
-class GenTaskIn(BaseModel):
-    topic: str; publish_at: str
+class ArticleIn(BaseModel): title: str; summary: str; content: str
+class CommentIn(BaseModel): article_id: int; author: str; content: str
+class ReplyIn(BaseModel): reply: str
+class LoginIn(BaseModel): username: str; password: str
+class GenTaskIn(BaseModel): topic: str; publish_at: str
 
 def check_auth(request: Request):
     if request.cookies.get("session") != "jingang_admin":
         raise HTTPException(status_code=401, detail="未登录")
 
-# ========== 登录 ==========
 @app.post("/api/login")
 def login(data: LoginIn):
     conn = database.get_db()
-    admin = conn.execute("SELECT * FROM admin WHERE username=? AND password=?", (data.username, data.password)).fetchone()
+    a = conn.execute("SELECT * FROM admin WHERE username=? AND password=?", (data.username, data.password)).fetchone()
     conn.close()
-    if admin:
+    if a:
         resp = JSONResponse({"ok": True})
         resp.set_cookie("session", "jingang_admin", httponly=True, max_age=86400*7)
         return resp
@@ -79,7 +72,7 @@ def get_article(article_id: int):
     conn = database.get_db()
     row = conn.execute("SELECT * FROM articles WHERE id=?", (article_id,)).fetchone()
     conn.close()
-    if not row: raise HTTPException(status_code=404, detail="文章不存在")
+    if not row: raise HTTPException(status_code=404)
     return dict(row)
 
 @app.post("/api/articles")
@@ -115,15 +108,25 @@ def list_knowledge(request: Request):
     return knowledge_search.list_knowledge()
 
 @app.post("/api/knowledge")
-def add_knowledge(title: str = Form(...), content: str = Form(...), request: Request = None):
+async def add_knowledge(request: Request):
     check_auth(request)
+    try:
+        form = await request.form()
+        title = form.get("title", "")
+        content = form.get("content", "")
+    except:
+        body = await request.json()
+        title = body.get("title", "")
+        content = body.get("content", "")
     knowledge_search.add_knowledge(title, content, "text")
     return {"ok": True}
 
 @app.post("/api/knowledge/upload")
-def upload_knowledge(file: UploadFile = File(...), request: Request = None):
+async def upload_knowledge(request: Request):
     check_auth(request)
-    content = file.file.read().decode("utf-8", errors="ignore")
+    form = await request.form()
+    file = form.get("file")
+    content = (await file.read()).decode("utf-8", errors="ignore")
     title = file.filename.replace(".txt", "").replace(".md", "")
     knowledge_search.add_knowledge(title, content, "file")
     return {"ok": True, "title": title, "length": len(content)}
@@ -134,10 +137,9 @@ def delete_knowledge(kid: int, request: Request):
     knowledge_search.delete_knowledge(kid)
     return {"ok": True}
 
-# ========== AI 生成文章 ==========
+# ========== AI 生成 ==========
 @app.post("/api/ai/generate")
 def ai_generate(data: GenTaskIn, request: Request):
-    """生成一篇 AI 文章（不发布，仅预览）"""
     check_auth(request)
     result = ai_writer.generate_article(data.topic)
     parsed = ai_writer.parse_article(result["raw"])
@@ -145,7 +147,6 @@ def ai_generate(data: GenTaskIn, request: Request):
 
 @app.post("/api/ai/publish")
 def ai_publish(data: GenTaskIn, request: Request):
-    """创建定时发布任务"""
     check_auth(request)
     task_id = scheduler.create_publish_task(data.topic, data.publish_at)
     return {"ok": True, "task_id": task_id}
@@ -160,6 +161,70 @@ def delete_task(task_id: int, request: Request):
     check_auth(request)
     scheduler.delete_task(task_id)
     return {"ok": True}
+
+# ========== 备份与恢复 ==========
+@app.get("/api/backup")
+def backup_database(request: Request):
+    """导出全部数据为 JSON"""
+    check_auth(request)
+    conn = database.get_db()
+    data = {
+        "backup_time": datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "articles": [dict(r) for r in conn.execute("SELECT * FROM articles").fetchall()],
+        "comments": [dict(r) for r in conn.execute("SELECT * FROM comments").fetchall()],
+        "knowledge": [dict(r) for r in conn.execute("SELECT * FROM knowledge").fetchall()],
+        "publish_tasks": [dict(r) for r in conn.execute("SELECT * FROM publish_tasks").fetchall()]
+    }
+    conn.close()
+    return JSONResponse(content=data)
+
+@app.post("/api/restore")
+def restore_database(request: Request):
+    """从 JSON 恢复数据"""
+    check_auth(request)
+    try:
+        body = request.json() if hasattr(request, 'json') else json.loads(request.body())
+    except:
+        raise HTTPException(status_code=400, detail="无效的备份文件")
+    
+    conn = database.get_db()
+    try:
+        # 清空现有数据
+        for table in ["articles", "comments", "knowledge", "publish_tasks"]:
+            conn.execute(f"DELETE FROM {table}")
+        
+        # 恢复文章
+        for a in body.get("articles", []):
+            conn.execute(
+                "INSERT INTO articles (id, title, summary, content, date, published, status) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (a.get("id"), a.get("title",""), a.get("summary",""), a.get("content",""), a.get("date",""), a.get("published",1), a.get("status","published"))
+            )
+        
+        # 恢复评论
+        for c in body.get("comments", []):
+            conn.execute(
+                "INSERT INTO comments (id, article_id, author, content, reply, ai_reply, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (c.get("id"), c.get("article_id"), c.get("author","同修"), c.get("content",""), c.get("reply",""), c.get("ai_reply",""), c.get("created_at","")))
+        
+        # 恢复知识库
+        for k in body.get("knowledge", []):
+            conn.execute(
+                "INSERT INTO knowledge (id, title, content, source, created_at) VALUES (?, ?, ?, ?, ?)",
+                (k.get("id"), k.get("title",""), k.get("content",""), k.get("source","text"), k.get("created_at","")))
+        
+        # 恢复定时任务
+        for t in body.get("publish_tasks", []):
+            conn.execute(
+                "INSERT INTO publish_tasks (id, topic, title, content, summary, status, publish_at, created_at, published_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (t.get("id"), t.get("topic",""), t.get("title",""), t.get("content",""), t.get("summary",""), t.get("status","pending"), t.get("publish_at",""), t.get("created_at",""), t.get("published_at","")))
+        
+        conn.commit()
+        return {"ok": True, "message": "数据恢复成功"}
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=f"恢复失败: {str(e)}")
+    finally:
+        conn.close()
 
 # ========== 评论 ==========
 @app.get("/api/comments/{article_id}")
@@ -183,7 +248,6 @@ def create_comment(data: CommentIn):
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
     cur = conn.execute("INSERT INTO comments (article_id, author, content, created_at) VALUES (?, ?, ?, ?)", (data.article_id, data.author, data.content, now))
     cid = cur.lastrowid; conn.commit()
-    # 异步生成 AI 回复
     t = threading.Thread(target=_gen_ai_reply, args=(cid, data.article_id))
     t.start()
     conn.close()
