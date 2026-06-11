@@ -20,8 +20,8 @@ def init_db():
         CREATE TABLE IF NOT EXISTS articles (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             title TEXT NOT NULL,
-            summary TEXT NOT NULL DEFAULT "",
-            content TEXT NOT NULL DEFAULT "",
+            summary TEXT NOT NULL DEFAULT '',
+            content TEXT NOT NULL DEFAULT '',
             date TEXT NOT NULL,
             published INTEGER NOT NULL DEFAULT 1
         );
@@ -29,9 +29,9 @@ def init_db():
         CREATE TABLE IF NOT EXISTS comments (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             article_id INTEGER NOT NULL,
-            author TEXT NOT NULL DEFAULT "同修",
+            author TEXT NOT NULL DEFAULT '同修',
             content TEXT NOT NULL,
-            reply TEXT DEFAULT "",
+            reply TEXT DEFAULT '',
             created_at TEXT NOT NULL,
             FOREIGN KEY (article_id) REFERENCES articles(id)
         );
