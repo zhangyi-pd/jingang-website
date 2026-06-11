@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="持诵《金刚经》的感悟与修心手记，愿与有缘同修共参般若智慧，同证菩提。">
+    <meta name="keywords" content="金刚经, 佛学, 感悟, 修行, 般若, 共修">
+    <meta name="author" content="慧觉居士">
+    <title>金刚般若 | 慧觉修心手记</title>
+    <!-- 引入优雅字体 & 简单重置 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600&family=Noto+Serif+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #fefaf5;
+            background-image: radial-gradient(circle at 10% 20%, rgba(245, 235, 220, 0.3) 2%, transparent 2.5%),
+                              radial-gradient(circle at 80% 70%, rgba(220, 200, 170, 0.2) 1.5%, transparent 2%);
+            background-size: 40px 40px, 35px 35px;
+            font-family: 'Noto Serif SC', 'Times New Roman', serif;
+            color: #2e241f;
+            line-height: 1.6;
+            scroll-behavior: smooth;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* 禅意头部 */
+        .site-header {
+            padding: 40px 0 20px;
+            text-align: center;
+            border-bottom: 1px solid #e2d9cf;
+            margin-bottom: 48px;
+        }
+
+        .logo {
+            font-size: 2.2rem;
+            font-weight: 500;
+            letter-spacing: 4px;
+            color: #8b6b4d;
+            font-family: 'Noto Serif SC', serif;
+        }
+
+        .logo small {
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            display: block;
+            color: #b19274;
+            margin-top: 8px;
+            font-weight: 300;
+        }
+
+        .nav-links {
+            margin-top: 24px;
+            display: flex;
+            justify-content: center;
+            gap: 36px;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #5d4636;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: color 0.2s;
+            letter-spacing: 1px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid transparent;
+        }
+
+        .nav-links a:hover {
+            color: #b2753c;
+            border-bottom-color: #dbbd9a;
+        }
+
+        /* 英雄区 / 引言 */
+        .hero {
+            text-align: center;
+            padding: 48px 20px 56px;
+            background: rgba(255, 248, 240, 0.6);
+            border-radius: 48px;
+            margin-bottom: 64px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+        }
+
+        .sutra-quote {
+            font-size: 1.5rem;
+            font-weight: 400;
+            line-height: 1.5;
+            color: #7e5d41;
+            max-width: 800px;
+            margin: 0 auto 24px;
+            font-style: normal;
+            border-left: 3px solid #d9bfa2;
+            padding-left: 28px;
+            text-align: left;
+        }
+
+        .hero-desc {
+            font-size: 1rem;
+            color: #7e6b5a;
+            max-width: 620px;
+            margin: 20px auto 0;
+        }
+
+        /* 通用区块 */
+        .section {
+            margin-bottom: 80px;
+            scroll-margin-top: 30px;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 500;
+            letter-spacing: 2px;
+            color: #7a5a3e;
+            position: relative;
+            display: inline-block;
+            margin-bottom: 48px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e7d9cc;
+        }
+
+        .section-title:after {
+            content: "✣";
+            position: absolute;
+            right: -32px;
+            bottom: 4px;
+            font-size: 1.2rem;
+            color: #d4bc9a;
+        }
+
+        /* 关于我卡片 */
+        .about-card {
+            background: #ffffffd9;
+            backdrop-filter: blur(2px);
+            padding: 40px 32px;
+            border-radius: 40px;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.03);
+            border: 1px solid #f3ede6;
+        }
+
+        .about-text p {
+            margin-bottom: 1.2rem;
+            font-size: 1.02rem;
+        }
+
+        .dharma-sign {
+            margin-top: 24px;
+            font-size: 0.95rem;
+            color: #b28b64;
+            font-style: italic;
+            border-top: 1px dashed #e9dfd3;
+            padding-top: 20px;
+        }
+
+        /* 感悟网格 */
+        .insight-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 32px;
+        }
+
+        .insight-card {
+            background: white;
+            border-radius: 32px;
+            padding: 28px 24px;
+            transition: all 0.25s ease;
+            border: 1px solid #f1e7de;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.02);
+            cursor: pointer;
+        }
+
+        .insight-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 30px -12px rgba(90, 60, 30, 0.1);
+            border-color: #e1cfbb;
+        }
+
+        .insight-title {
+            font-size: 1.45rem;
+            font-weight: 600;
+            color: #6b4c30;
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+
+        .insight-date {
+            font-size: 0.8rem;
+            font-family: 'Inter', sans-serif;
+            color: #b9946e;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+            display: inline-block;
+            border-left: 2px solid #eeddcb;
+            padding-left: 10px;
+        }
+
+        .insight-summary {
+            color: #5e4c3b;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .read-more {
+            color: #b36b2e;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: gap 0.2s;
+        }
+
+        .read-more i {
+            font-size: 0.75rem;
+        }
+
+        /* 共修邀请 */
+        .community-card {
+            background: linear-gradient(115deg, #fff7ef 0%, #fef3e6 100%);
+            border-radius: 48px;
+            padding: 48px 36px;
+            text-align: center;
+            border: 1px solid #eedfcb;
+        }
+
+        .community-title {
+            font-size: 1.8rem;
+            font-weight: 500;
+            color: #8c623b;
+            margin-bottom: 16px;
+        }
+
+        .contact-methods {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 36px;
+            margin: 36px 0 24px;
+        }
+
+        .contact-item {
+            background: white;
+            border-radius: 60px;
+            padding: 12px 24px;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+            transition: all 0.2s;
+            border: 1px solid #f0e3d6;
+        }
+
+        .contact-item i {
+            font-size: 1.3rem;
+            color: #b8865b;
+        }
+
+        .contact-item span {
+            color: #6b4e34;
+        }
+
+        .contact-item:hover {
+            background: #fcf6ef;
+            border-color: #dbbc98;
+        }
+
+        .wechat-placeholder {
+            font-size: 0.8rem;
+            color: #b28657;
+            margin-top: 8px;
+        }
+
+        .btn-outline-ghost {
+            background: transparent;
+            border: 1px solid #d6c0a8;
+            border-radius: 60px;
+            padding: 10px 28px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #7e5e3e;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .btn-outline-ghost:hover {
+            background: #f3e9df;
+            border-color: #bb9977;
+        }
+
+        /* 模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(30, 20, 15, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #fffbf5;
+            max-width: 680px;
+            width: 90%;
+            max-height: 85vh;
+            border-radius: 48px;
+            padding: 32px 36px;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 25px 40px rgba(0,0,0,0.2);
+            border: 1px solid #ebddcf;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 24px;
+            right: 28px;
+            font-size: 26px;
+            cursor: pointer;
+            color: #aa7f58;
+            transition: 0.2s;
+        }
+
+        .modal-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #794f28;
+            margin-bottom: 12px;
+            padding-right: 24px;
+        }
+
+        .modal-date {
+            font-size: 0.8rem;
+            color: #c09a71;
+            margin-bottom: 24px;
+            border-left: 2px solid #e4d2c0;
+            padding-left: 12px;
+        }
+
+        .modal-body {
+            font-size: 1rem;
+            color: #3a2c22;
+            line-height: 1.7;
+        }
+
+        .modal-body p {
+            margin-bottom: 1.2rem;
+        }
+
+        /* 页脚回向 */
+        .footer {
+            margin-top: 80px;
+            text-align: center;
+            padding: 40px 20px 48px;
+            border-top: 1px solid #e6dbcf;
+            font-size: 0.85rem;
+            color: #a38364;
+        }
+
+        .dedication {
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            font-style: italic;
+            max-width: 500px;
+            margin: 0 auto 16px;
+        }
+
+        /* 响应式 */
+        @media (max-width: 720px) {
+            .container {
+                padding: 0 20px;
+            }
+            .hero {
+                padding: 32px 16px;
+            }
+            .sutra-quote {
+                font-size: 1.2rem;
+                padding-left: 18px;
+            }
+            .section-title {
+                font-size: 1.5rem;
+            }
+            .community-card {
+                padding: 36px 20px;
+            }
+            .insight-grid {
+                grid-template-columns: 1fr;
+            }
+            .contact-methods {
+                gap: 20px;
+                flex-direction: column;
+                align-items: center;
+            }
+            .modal-content {
+                padding: 28px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header class="site-header">
+        <div class="logo">
+            金刚般若
+            <small>慧觉居士 · 修心手记</small>
+        </div>
+        <div class="nav-links">
+            <a href="#home">首页</a>
+            <a href="#about">初心</a>
+            <a href="#insights">感悟</a>
+            <a href="#community">共修</a>
+        </div>
+    </header>
+
+    <section id="home" class="hero">
+        <div class="sutra-quote">
+            “凡所有相，皆是虚妄。若见诸相非相，即见如来。”<br>
+            ——《金刚般若波罗蜜多经》
+        </div>
+        <div class="hero-desc">
+            持诵《金刚经》千余日，愿记录每一念清凉，分享「应无所住而生其心」的体悟。<br>
+            若有缘，愿同登般若船，共行菩萨道。
+        </div>
+    </section>
+
+    <section id="about" class="section">
+        <h2 class="section-title">· 缘起与初心 ·</h2>
+        <div class="about-card">
+            <div class="about-text">
+                <p>末学慧觉，一名平凡的佛弟子。初遇《金刚经》，便被“降伏其心”四字深深触动。日日诵持，从磕磕绊绊到念念分明，经文如明镜，照见执着、傲慢与恐惧，也渐渐照见本来无住的清净。</p>
+                <p>建此小站，不为名闻，只为将诵经时闪现的感悟、生活中运用般若智慧的痕迹一一记录。文字笨拙，但法喜真实。愿以此方寸之地，聚集同见同行的善知识，互相策励，同沾法益。</p>
+                <p>若你也在持诵《金刚经》，或对空性智慧心生向往，欢迎留下只言片语，或默默共修。一切法皆是佛法，望我们都能于尘世中，心无挂碍。</p>
+                <div class="dharma-sign">
+                    <i class="fas fa-om" style="margin-right: 6px;"></i> 每日清晨诵经一部，回向法界一切众生。
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="insights" class="section">
+        <h2 class="section-title">· 近期感悟 ·</h2>
+        <div class="insight-grid" id="insightGrid"></div>
+        <div style="text-align: center; margin-top: 40px;">
+            <button class="btn-outline-ghost" id="randomQuoteBtn"><i class="fas fa-feather-alt"></i> 随机金刚法语</button>
+        </div>
+    </section>
+
+    <section id="community" class="section">
+        <div class="community-card">
+            <div class="community-title">
+                <i class="fas fa-hands-helping"></i> 愿结善缘 · 同修共进
+            </div>
+            <p style="max-width: 580px; margin: 0 auto; color: #7f623f;">一人行道迟，众人行稳远。若您也诵持《金刚经》，或有修行中的疑惑、感悟，期待与您交流。暂时组建“金刚不坏·线上共修群”，每日互勉，每月经典共修。</p>
+            <div class="contact-methods">
+                <div class="contact-item">
+                    <i class="fas fa-envelope"></i>
+                    <span>慧觉邮箱: huijue@jingang.org</span>
+                </div>
+                <div class="contact-item" id="copyWechat">
+                    <i class="fab fa-weixin"></i>
+                    <span>微信: prajna_zhihui</span>
+                </div>
+            </div>
+            <div class="wechat-placeholder">
+                <i class="fas fa-qrcode"></i> 添加微信请备注“金刚同修”，邀请入群
+            </div>
+            <button class="btn-outline-ghost" id="copyEmailBtn" style="margin-top: 24px;"><i class="far fa-copy"></i> 复制邮箱地址</button>
+            <p style="margin-top: 28px; font-size: 0.8rem; color: #b68f64;">也欢迎在邮件中分享您的感悟，择善刊登于此，共沐法雨。</p>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="dedication">
+            愿以此功德，庄严佛净土。<br>
+            上报四重恩，下济三途苦。<br>
+            若有见闻者，悉发菩提心。<br>
+            尽此一报身，同生极乐国。
+        </div>
+        <div>© 2025 慧觉修心手记 · 持诵《金刚经》 应无所住而生其心</div>
+    </footer>
+</div>
+
+<!-- 模态框 -->
+<div id="insightModal" class="modal">
+    <div class="modal-content">
+        <span class="modal-close" id="closeModalBtn">&times;</span>
+        <div class="modal-title" id="modalTitle"></div>
+        <div class="modal-date" id="modalDate"></div>
+        <div class="modal-body" id="modalBody"></div>
+    </div>
+</div>
+
+<script>
+    // ---------- 感悟数据 (可编辑扩展) ----------
+    // 用户可在此数组中新增或修改文章，每篇包含 id, title, date, summary, contentHtml
+    const insightsData = [
+        {
+            id: 1,
+            title: "应无所住：放下对“功德”的执着",
+            date: "乙巳年 三月十二",
+            summary: "诵经百部后，忽然惊觉自己一直暗中计较“遍数”。金刚经云：菩萨于法，应无所住行于布施……",
+            contentHtml: `
+                <p>清晨诵完第二十一部《金刚经》，看着计数器上的数字，心里竟生起一丝得意：“不错，又完成一部。” 随即惭愧——这不就是住相吗？</p>
+                <p>经中反复告诫“无我相、人相、众生相、寿者相”，而我却执着“诵经功德相”。如果诵经只是为了积累数字，与凡夫求福何异？《金刚经》破一切执着，第一步就要破“功德相”。于是我尝试诵经时不计数，不思议，只是如理作意，随文入观。渐渐地，紧张消散，每一句经文如甘露洗心。</p>
+                <p>愿与同修共勉：以无住心持诵，方契般若。</p>
+            `
+        },
+        {
+            id: 2,
+            title: "“过去心不可得” —— 从悔恨中解脱",
+            date: "乙巳年 二月廿八",
+            summary: "前几日与同事发生争执，夜晚辗转反侧，满脑子都是“如果当时换一种说法”。忽然想起经中的偈子……",
+            contentHtml: `
+                <p>“过去心不可得，现在心不可得，未来心不可得。” 熟悉得能背诵，却从未在生活中用过。当我深陷后悔情绪时，猛然察觉：后悔正是住在“过去心”中，把早已消失的影像当做真实。 </p>
+                <p>金刚智慧并非否定因果，而是看穿诸法缘起性空。吵架一事已过去，内疚只是妄念相续。当下吸气、放松，看着心念如水泡生灭。不抗拒悔意，也不追逐它，烦恼便失去力量。 </p>
+                <p>愿我们都能学会：过去事，过去了；未来事，未到来；安住当下，念起即觉。</p>
+            `
+        },
+        {
+            id: 3,
+            title: "“凡所有相，皆是虚妄” 与日常触境",
+            date: "乙巳年 正月十五",
+            summary: "有一次在街上看到曾经最讨厌的人，忽然心头火起。然后自问：这愤怒的“相”是真的吗？……",
+            contentHtml: `
+                <p>那个人并没有说任何话，只是路过。我的愤怒源于记忆中的评判，是过去的“相”在心中重演。佛陀说凡所有相皆是虚妄——包括我们脑海里的故事、标签、爱憎。 </p>
+                <p>当我试着直接感受呼吸，不认同“愤怒”为我，那股火气竟慢慢消融。原来境缘无好丑，好丑起于心。练习“见诸相非相”，并非冷漠，而是慈悲地看到众生皆在无明梦中。 </p>
+                <p>每日出门前默念一句“凡所有相，皆是虚妄”，少了很多纠结。</p>
+            `
+        },
+        {
+            id: 4,
+            title: "诵经如镜：照见“我慢”",
+            date: "甲辰年 腊月初三",
+            summary: "给初学同修解释经文时，心中隐隐觉得自己更“懂”。马上警觉，这正是我相坚固……",
+            contentHtml: `
+                <p>《金刚经》前半部反复说“无我相”。而我不知不觉陷入“我解如来真实义”的慢心。每一次自以为是，都是修行的岔路。 </p>
+                <p>金刚经是破执利器，连“佛法”也不应执着：“知我说法，如筏喻者，法尚应舍，何况非法。” 越诵经越柔软，越懂得凡夫习气深重。之后每有慢心生起，便合掌念佛，惭愧忏悔。 </p>
+                <p>愿与各位善知识共勉：以经为镜，常拭心尘。</p>
+            `
+        }
+    ];
+
+    // 渲染文章卡片
+    function renderInsights() {
+        const grid = document.getElementById('insightGrid');
+        if (!grid) return;
+        grid.innerHTML = '';
+        insightsData.forEach(article => {
+            const card = document.createElement('div');
+            card.className = 'insight-card';
+            card.setAttribute('data-id', article.id);
+            card.innerHTML = `
+                <div class="insight-title">${escapeHtml(article.title)}</div>
+                <div class="insight-date">${escapeHtml(article.date)}</div>
+                <div class="insight-summary">${escapeHtml(article.summary)}</div>
+                <div class="read-more"> 阅读全文 <i class="fas fa-arrow-right"></i> </div>
+            `;
+            card.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openModal(article);
+            });
+            grid.appendChild(card);
+        });
+    }
+
+    // 简易防XSS
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+            return c;
+        });
+    }
+
+    // 模态框逻辑
+    const modal = document.getElementById('insightModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalDate = document.getElementById('modalDate');
+    const modalBody = document.getElementById('modalBody');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+
+    function openModal(article) {
+        modalTitle.innerText = article.title;
+        modalDate.innerText = article.date;
+        // 内容支持HTML（安全：数据由作者本人编辑，无用户输入注入风险，但保留转义可控）
+        modalBody.innerHTML = article.contentHtml || '<p>无详细内容</p>';
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    closeModalBtn.addEventListener('click', closeModal);
+
+    // 随机金刚法语 (扩展功能，增加同修氛围)
+    const randomQuotes = [
+        "「一切有为法，如梦幻泡影，如露亦如电，应作如是观。」",
+        "「菩萨于法，应无所住行于布施，所谓不住色布施，不住声香味触法布施。」",
+        "「应如是生清净心，不应住色生心，不应住声香味触法生心，应无所住而生其心。」",
+        "「如来者，无所从来，亦无所去，故名如来。」",
+        "「离一切诸相，则名诸佛。」",
+        "「是法平等，无有高下，是名阿耨多罗三藐三菩提。」"
+    ];
+    const randomBtn = document.getElementById('randomQuoteBtn');
+    if (randomBtn) {
+        randomBtn.addEventListener('click', () => {
+            const randomIndex = Math.floor(Math.random() * randomQuotes.length);
+            const quote = randomQuotes[randomIndex];
+            // 使用一个轻提示（alert较为干扰，改用临时弹出一个模拟toast? 简单 alert 保持禅意）
+            alert("✣ 金刚法语 ✣\n\n" + quote);
+        });
+    }
+
+    // 复制邮箱功能
+    const copyEmailBtn = document.getElementById('copyEmailBtn');
+    if (copyEmailBtn) {
+        copyEmailBtn.addEventListener('click', () => {
+            const email = "huijue@jingang.org";
+            navigator.clipboard.writeText(email).then(() => {
+                alert("✉️ 邮箱地址已复制：huijue@jingang.org\n期待您的来信，共修交流。");
+            }).catch(() => {
+                prompt("手动复制邮箱地址:", email);
+            });
+        });
+    }
+
+    // 复制微信号功能 (点击微信号区域)
+    const wechatBox = document.getElementById('copyWechat');
+    if (wechatBox) {
+        wechatBox.addEventListener('click', () => {
+            const wechatId = "prajna_zhihui";
+            navigator.clipboard.writeText(wechatId).then(() => {
+                alert("微信号已复制：" + wechatId + "\n添加时请备注“金刚同修”，感恩合十。");
+            }).catch(() => {
+                alert("请手动复制微信号: " + wechatId);
+            });
+        });
+    }
+
+    // 平滑锚点
+    document.querySelectorAll('.nav-links a').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('href').substring(1);
+            const targetElement = document.getElementById(targetId);
+            if (targetElement) {
+                targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else if (targetId === 'home') {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        });
+    });
+
+    // 初始化渲染
+    renderInsights();
+</script>
+</body>
+</html>
