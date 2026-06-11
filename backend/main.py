@@ -17,6 +17,7 @@ import deepseek
 import knowledge_search
 import ai_writer
 import scheduler
+import chatbot
 
 app = FastAPI(title="金刚般若后台")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
@@ -301,6 +302,16 @@ def delete_comment(cid: int, request: Request):
     conn.execute("DELETE FROM comments WHERE id=?", (cid,))
     conn.commit(); conn.close()
     return {"ok": True}
+
+@app.post("/api/chat")
+def chat_with_ai(data: dict):
+    """与佛学小助理对话"""
+    messages = data.get("messages", [])
+    if not messages:
+        raise HTTPException(status_code=400, detail="消息不能为空")
+    reply = chatbot.chat(messages)
+    return {"reply": reply}
+
 
 # ========== 统计 ==========
 @app.get("/api/stats")
