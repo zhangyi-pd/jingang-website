@@ -1,0 +1,136 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>知识库 | 金刚般若</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Noto Serif SC',serif;background:#fefaf5;color:#2e241f;display:flex;min-height:100vh}
+        .sidebar{width:220px;background:white;border-right:1px solid #f3ede6;padding:32px 20px;flex-shrink:0}
+        .sidebar h2{color:#8b6b4d;font-size:1.1rem;font-weight:500;letter-spacing:1px;margin-bottom:32px;text-align:center}
+        .sidebar h2 small{display:block;font-size:0.75rem;color:#b19274;margin-top:4px;font-weight:300}
+        .nav-item{display:block;padding:12px 16px;color:#5d4636;text-decoration:none;border-radius:10px;margin-bottom:4px;font-size:0.95rem;transition:all .2s}
+        .nav-item i{width:24px;color:#b19274}.nav-item:hover,.nav-item.active{background:#f8f2ea;color:#8b6b4d}
+        .nav-item.logout{margin-top:40px;color:#c0392b}.nav-item.logout:hover{background:#fdf0ed}
+        .main{flex:1;padding:32px 40px}
+        .main h1{font-size:1.5rem;font-weight:500;color:#7a5a3e;margin-bottom:24px}
+        .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;gap:12px}
+        .btn{padding:10px 20px;border:none;border-radius:10px;font-family:inherit;font-size:0.9rem;cursor:pointer;transition:all .2s}
+        .btn-primary{background:#8b6b4d;color:white}.btn-primary:hover{background:#7a5a3e}
+        .btn-secondary{background:#f3ede6;color:#5d4636}.btn-secondary:hover{background:#e2d9cf}
+        .btn-danger{background:#e74c3c;color:white;padding:4px 10px;font-size:.8rem}.btn-danger:hover{background:#c0392b}
+        .kb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+        .kb-card{background:white;padding:20px;border-radius:12px;border:1px solid #f3ede6}
+        .kb-card h3{font-size:.95rem;font-weight:500;margin-bottom:4px}
+        .kb-card .meta{font-size:.78rem;color:#b19274;margin-bottom:8px}
+        .kb-card .preview{font-size:.85rem;color:#7e6b5a;line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+        .kb-card .actions{margin-top:10px}
+        .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);align-items:center;justify-content:center;z-index:100}
+        .modal.show{display:flex}
+        .modal-content{background:white;border-radius:20px;padding:32px;width:600px;max-width:92vw;max-height:85vh;overflow-y:auto}
+        .modal-content h2{color:#7a5a3e;font-size:1.2rem;margin-bottom:20px}
+        .form-group{margin-bottom:16px}
+        .form-group label{display:block;color:#5d4636;font-size:.9rem;margin-bottom:6px}
+        .form-group input,.form-group textarea{width:100%;padding:10px 14px;border:1px solid #e2d9cf;border-radius:10px;font-family:inherit;font-size:.95rem;outline:none}
+        .form-group textarea{min-height:120px;resize:vertical}
+        .form-group input:focus,.form-group textarea:focus{border-color:#b2753c}
+        .modal-actions{display:flex;gap:12px;justify-content:flex-end;margin-top:20px}
+        .empty{color:#b19274;text-align:center;padding:60px}
+        .file-upload{border:2px dashed #e2d9cf;border-radius:12px;padding:24px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:16px}
+        .file-upload:hover{border-color:#b2753c;background:#f8f2ea}
+        .file-upload i{font-size:2rem;color:#b19274;margin-bottom:8px}
+        .file-upload p{font-size:.85rem;color:#b19274}
+        .tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:.75rem;background:#e8f5e9;color:#388e3c;margin-left:6px}
+    </style>
+</head>
+<body>
+<div class="sidebar">
+    <h2>金刚般若<small>内容管理系统</small></h2>
+    <a href="/admin/dashboard.html" class="nav-item"><i class="fas fa-home"></i> 控制台</a>
+    <a href="/admin/articles.html" class="nav-item"><i class="fas fa-book"></i> 文章管理</a>
+    <a href="/admin/knowledge.html" class="nav-item active"><i class="fas fa-database"></i> 知识库</a>
+    <a href="/admin/ai_writer.html" class="nav-item"><i class="fas fa-robot"></i> AI 发文</a>
+    <a href="/admin/comments.html" class="nav-item"><i class="fas fa-comments"></i> 评论管理</a>
+    <a href="#" class="nav-item logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> 退出登录</a>
+</div>
+<div class="main">
+    <h1>📚 知识库</h1>
+    <div class="toolbar">
+        <span style="color:#b19274;font-size:.9rem" id="kbCount"></span>
+        <button class="btn btn-primary" onclick="openAddModal()"><i class="fas fa-plus"></i> 添加素材</button>
+    </div>
+    <div class="file-upload" id="fileUploadBtn">
+        <i class="fas fa-upload"></i>
+        <p>点击上传 .txt 或 .md 文件</p>
+    </div>
+    <input type="file" id="fileInput" accept=".txt,.md" style="display:none">
+    <div class="kb-grid" id="kbGrid"></div>
+</div>
+
+<div class="modal" id="addModal">
+    <div class="modal-content">
+        <h2>添加素材</h2>
+        <div class="form-group"><label>标题</label><input id="kbTitle" placeholder="给这段素材起个名字"></div>
+        <div class="form-group"><label>内容</label><textarea id="kbContent" placeholder="粘贴经文、感悟、开示等文字素材..."></textarea></div>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+            <button class="btn btn-primary" onclick="saveKnowledge()">保存</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function checkAuth(){const r=await fetch('/api/stats');if(!r.ok)window.location.href='/admin/index.html'}
+    async function logout(){await fetch('/api/logout',{method:'POST'});window.location.href='/admin/index.html'}
+    
+    async function loadKnowledge(){
+        const res=await fetch('/api/knowledge');const items=await res.json();
+        document.getElementById('kbCount').textContent=`共 ${items.length} 条素材`;
+        const grid=document.getElementById('kbGrid');
+        if(items.length===0){grid.innerHTML='<div class="empty">还没有素材，上传一些经文或感悟吧 🙏</div>';return}
+        grid.innerHTML=items.map(k=>`
+            <div class="kb-card">
+                <h3>${escapeHtml(k.title)} <span class="tag">${k.source==='file'?'📄 文件':'✍️ 手动'}</span></h3>
+                <div class="meta">${k.created_at}</div>
+                <div class="preview">${escapeHtml(k.content.slice(0,200))}</div>
+                <div class="actions"><button class="btn btn-danger" onclick="deleteKb(${k.id})">删除</button></div>
+            </div>
+        `).join('');
+    }
+    
+    function openAddModal(){document.getElementById('addModal').classList.add('show')}
+    function closeModal(){document.getElementById('addModal').classList.remove('show')}
+    
+    async function saveKnowledge(){
+        const title=document.getElementById('kbTitle').value.trim();
+        const content=document.getElementById('kbContent').value.trim();
+        if(!title||!content){alert('请填写标题和内容');return}
+        const fd=new FormData();fd.append('title',title);fd.append('content',content);
+        const res=await fetch('/api/knowledge',{method:'POST',body:fd});
+        if(res.ok){closeModal();document.getElementById('kbTitle').value='';document.getElementById('kbContent').value='';loadKnowledge()}
+        else alert('保存失败');
+    }
+    
+    async function deleteKb(id){
+        if(!confirm('确定要删除这条素材吗？'))return;
+        const res=await fetch('/api/knowledge/'+id,{method:'DELETE'});
+        if(res.ok)loadKnowledge();
+    }
+    
+    // 文件上传
+    document.getElementById('fileUploadBtn').addEventListener('click',()=>document.getElementById('fileInput').click());
+    document.getElementById('fileInput').addEventListener('change',async function(){
+        const file=this.files[0];if(!file)return;
+        const fd=new FormData();fd.append('file',file);
+        const res=await fetch('/api/knowledge/upload',{method:'POST',body:fd});
+        if(res.ok){this.value='';loadKnowledge()}
+        else alert('上传失败');
+    });
+    
+    function escapeHtml(s){if(!s)return '';return s.replace(/[&<>]/g,m=>m==='&'?'&amp;':m==='<'?'&lt;':'&gt;')}
+    loadKnowledge();
+</script>
+</body>
+</html>
