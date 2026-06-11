@@ -16,7 +16,6 @@ def init_db():
     try:
         _init_db_inner()
     except sqlite3.DatabaseError:
-        # 数据库损坏，删掉重建
         os.remove(DB_PATH)
         _init_db_inner()
 
@@ -40,6 +39,7 @@ def _init_db_inner():
             author TEXT NOT NULL DEFAULT '同修',
             content TEXT NOT NULL,
             reply TEXT DEFAULT '',
+            ai_reply TEXT DEFAULT '',
             created_at TEXT NOT NULL,
             FOREIGN KEY (article_id) REFERENCES articles(id)
         );
@@ -50,6 +50,12 @@ def _init_db_inner():
             password TEXT NOT NULL
         );
     """)
+    
+    # 兼容旧数据库：如果 ai_reply 字段不存在就加上
+    try:
+        cursor.execute("ALTER TABLE comments ADD COLUMN ai_reply TEXT DEFAULT ''")
+    except sqlite3.OperationalError:
+        pass  # 字段已存在
     
     cursor.execute("SELECT COUNT(*) FROM admin")
     if cursor.fetchone()[0] == 0:
