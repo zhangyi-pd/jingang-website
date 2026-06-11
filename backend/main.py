@@ -10,7 +10,6 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
-# 确保能导入同目录下的 database 模块
 sys.path.insert(0, os.path.dirname(__file__))
 import database
 
@@ -30,10 +29,7 @@ BASE_DIR = Path(__file__).parent.parent
 def startup():
     database.init_db()
 
-# ========== 静态文件服务 ==========
 app.mount("/admin", StaticFiles(directory=str(BASE_DIR / "admin"), html=True), name="admin")
-
-# ========== 数据模型 ==========
 
 class ArticleIn(BaseModel):
     title: str
@@ -51,8 +47,6 @@ class ReplyIn(BaseModel):
 class LoginIn(BaseModel):
     username: str
     password: str
-
-# ========== 管理员认证 ==========
 
 def check_auth(request: Request):
     session = request.cookies.get("session")
@@ -77,8 +71,6 @@ def logout():
     resp = JSONResponse({"ok": True})
     resp.delete_cookie("session")
     return resp
-
-# ========== 文章接口 ==========
 
 @app.get("/api/articles")
 def list_articles(published_only: bool = True):
@@ -134,8 +126,6 @@ def delete_article(article_id: int, request: Request):
     conn.close()
     return {"ok": True}
 
-# ========== 评论接口 ==========
-
 @app.get("/api/comments/{article_id}")
 def list_comments(article_id: int):
     conn = database.get_db()
@@ -186,8 +176,6 @@ def delete_comment(comment_id: int, request: Request):
     conn.close()
     return {"ok": True}
 
-# ========== 网站统计 ==========
-
 @app.get("/api/stats")
 def get_stats(request: Request):
     check_auth(request)
@@ -198,14 +186,11 @@ def get_stats(request: Request):
     conn.close()
     return {"articles": article_count, "comments": comment_count, "unreplied": unreplied}
 
-# ========== 首页 ==========
-
 @app.get("/")
 def index():
     return FileResponse(str(BASE_DIR / "index.html"))
 
-# ========== 启动入口 ==========
-
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
