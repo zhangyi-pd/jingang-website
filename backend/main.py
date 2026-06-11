@@ -27,6 +27,14 @@ BASE_DIR = Path(__file__).parent.parent
 def startup():
     database.init_db()
     scheduler.start_scheduler()
+    # 自动从 GitHub 恢复数据
+    try:
+        if backup_manager.auto_restore():
+            print('[备份] 从 GitHub 自动恢复数据成功')
+        else:
+            print('[备份] 没有找到备份文件或恢复失败')
+    except Exception as e:
+        print(f'[备份] 自动恢复异常: {e}')
 
 app.mount("/admin", StaticFiles(directory=str(BASE_DIR / "admin"), html=True), name="admin")
 
@@ -334,3 +342,4 @@ if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run(app, host="0.0.0.0", port=port)
+
