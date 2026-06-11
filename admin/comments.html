@@ -26,7 +26,7 @@
         .nav-item.logout:hover { background: #fdf0ed; }
         .main { flex: 1; padding: 32px 40px; }
         .main h1 { font-size: 1.5rem; font-weight: 500; color: #7a5a3e; margin-bottom: 24px; }
-        .filter-bar { margin-bottom: 20px; }
+        .filter-bar { margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
         .filter-bar select {
             padding: 8px 16px; border: 1px solid #e2d9cf; border-radius: 10px;
             font-family: inherit; font-size: 0.9rem; outline: none;
@@ -43,12 +43,20 @@
         .comment-card .article-link { font-size: 0.8rem; color: #b19274; }
         .comment-card .time { font-size: 0.8rem; color: #b19274; }
         .comment-card .content { font-size: 0.95rem; line-height: 1.6; margin-bottom: 12px; color: #2e241f; }
+        .comment-card .reply-section { margin-top: 8px; }
         .comment-card .reply-box {
             background: #f8f2ea; padding: 14px 18px; border-radius: 10px;
-            margin-top: 8px; border-left: 3px solid #dbbd9a;
+            border-left: 3px solid #dbbd9a;
         }
         .comment-card .reply-box .label { font-size: 0.8rem; color: #8b6b4d; font-weight: 500; margin-bottom: 4px; }
         .comment-card .reply-box .text { font-size: 0.9rem; color: #5d4636; }
+        .comment-card .ai-suggestion {
+            background: #f0f7f0; padding: 14px 18px; border-radius: 10px;
+            margin-top: 8px; border-left: 3px solid #4caf50;
+        }
+        .comment-card .ai-suggestion .label { font-size: 0.8rem; color: #388e3c; font-weight: 500; margin-bottom: 4px; }
+        .comment-card .ai-suggestion .text { font-size: 0.9rem; color: #2e7d32; }
+        .comment-card .ai-suggestion .actions { margin-top: 8px; display: flex; gap: 8px; }
         .reply-editor { margin-top: 12px; display: none; }
         .reply-editor textarea {
             width: 100%; padding: 10px 14px; border: 1px solid #e2d9cf;
@@ -65,14 +73,22 @@
         .btn-primary:hover { background: #7a5a3e; }
         .btn-secondary { background: #f3ede6; color: #5d4636; }
         .btn-secondary:hover { background: #e2d9cf; }
+        .btn-success { background: #4caf50; color: white; }
+        .btn-success:hover { background: #388e3c; }
+        .btn-warning { background: #ff9800; color: white; }
+        .btn-warning:hover { background: #f57c00; }
         .btn-danger { background: #e74c3c; color: white; font-size: 0.8rem; padding: 4px 10px; }
         .btn-danger:hover { background: #c0392b; }
+        .btn-sm { padding: 4px 10px; font-size: 0.78rem; }
         .badge {
             display: inline-block; padding: 2px 10px; border-radius: 20px;
             font-size: 0.75rem; margin-left: 8px;
         }
         .badge-pending { background: #fef3e0; color: #b2753c; }
         .badge-done { background: #e8f5e9; color: #388e3c; }
+        .badge-ai { background: #e8f5e9; color: #2e7d32; }
+        .badge-generating { background: #e3f2fd; color: #1565c0; }
+        .loading { color: #b19274; font-size: 0.85rem; }
     </style>
 </head>
 <body>
@@ -84,14 +100,15 @@
         <a href="#" class="nav-item logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> 退出登录</a>
     </div>
     <div class="main">
-        <h1>💬 评论管理</h1>
+        <h1>💬 评论管理 <span style="font-size:0.8rem;color:#4caf50;font-weight:400">✨ AI 自动回复已开启</span></h1>
         <div class="filter-bar">
             <select id="filterSelect" onchange="loadComments()">
                 <option value="all">全部评论</option>
                 <option value="pending">待回复</option>
                 <option value="replied">已回复</option>
+                <option value="ai">AI 建议待确认</option>
             </select>
-            <span style="margin-left:12px;color:#b19274;font-size:0.85rem" id="commentCount"></span>
+            <span style="color:#b19274;font-size:0.85rem" id="commentCount"></span>
         </div>
         <div id="commentList"></div>
     </div>
@@ -106,37 +123,108 @@
             const res = await fetch('/api/comments');
             let comments = await res.json();
             const filter = document.getElementById('filterSelect').value;
-            if (filter === 'pending') comments = comments.filter(c => !c.reply);
+            if (filter === 'pending') comments = comments.filter(c => !c.reply && !c.ai_reply);
             else if (filter === 'replied') comments = comments.filter(c => c.reply);
+            else if (filter === 'ai') comments = comments.filter(c => !c.reply && c.ai_reply);
             
             document.getElementById('commentCount').textContent = `共 ${comments.length} 条`;
             const list = document.getElementById('commentList');
-            list.innerHTML = comments.map(c => `
+            list.innerHTML = comments.map(c => {
+                const hasReply = !!c.reply;
+                const hasAi = !!c.ai_reply;
+                let badgeHtml = '';
+                if (hasReply) badgeHtml = '<span class="badge badge-done">已回复</span>';
+                else if (hasAi) badgeHtml = '<span class="badge badge-ai">AI 建议</span>';
+                else badgeHtml = '<span class="badge badge-pending">待回复</span>';
+                
+                return `
                 <div class="comment-card">
                     <div class="header">
                         <div>
-                            <span class="author">${c.author}</span>
-                            <span class="article-link">于「${c.article_title || '未知文章'}」</span>
-                            ${c.reply ? '<span class="badge badge-done">已回复</span>' : '<span class="badge badge-pending">待回复</span>'}
+                            <span class="author">${escapeHtml(c.author)}</span>
+                            <span class="article-link">于「${escapeHtml(c.article_title || '未知文章')}」</span>
+                            ${badgeHtml}
                         </div>
-                        <span class="time">${c.created_at}</span>
+                        <span class="time">${escapeHtml(c.created_at)}</span>
                     </div>
-                    <div class="content">${c.content}</div>
-                    ${c.reply ? `
-                        <div class="reply-box">
-                            <div class="label">🙏 贤仪居士的回复：</div>
-                            <div class="text">${c.reply}</div>
+                    <div class="content">${escapeHtml(c.content)}</div>
+                    
+                    ${hasReply ? `
+                        <div class="reply-section">
+                            <div class="reply-box">
+                                <div class="label">🙏 你的回复：</div>
+                                <div class="text">${escapeHtml(c.reply)}</div>
+                            </div>
                         </div>
                     ` : ''}
-                    <div class="reply-editor" id="replyEditor_${c.id}" style="${c.reply ? 'display:none' : 'display:block'}">
-                        <textarea id="replyText_${c.id}" placeholder="输入回复内容...">${c.reply || ''}</textarea>
-                        <div class="actions">
-                            <button class="btn btn-primary" onclick="submitReply(${c.id})">提交回复</button>
-                            <button class="btn btn-danger" onclick="deleteComment(${c.id})" style="margin-left:auto">删除</button>
+                    
+                    ${hasAi && !hasReply ? `
+                        <div class="ai-suggestion">
+                            <div class="label">✨ AI 建议回复：</div>
+                            <div class="text">${escapeHtml(c.ai_reply)}</div>
+                            <div class="actions">
+                                <button class="btn btn-success btn-sm" onclick="acceptAiReply(${c.id})">✅ 采纳</button>
+                                <button class="btn btn-warning btn-sm" onclick="regenAiReply(${c.id})">🔄 重新生成</button>
+                                <button class="btn btn-secondary btn-sm" onclick="openEditor(${c.id})">✏️ 手动修改</button>
+                            </div>
                         </div>
+                    ` : ''}
+                    
+                    ${!hasReply && !hasAi ? `
+                        <div class="reply-editor" id="replyEditor_${c.id}" style="display:block">
+                            <span class="loading">⏳ AI 正在生成回复，请稍后刷新...</span>
+                        </div>
+                    ` : ''}
+                    
+                    ${hasReply ? `
+                        <div style="margin-top:8px"><button class="btn btn-danger btn-sm" onclick="deleteComment(${c.id})">删除</button></div>
+                    ` : ''}
+                </div>`;
+            }).join('');
+            
+            // 给没有 AI 建议也没有手动回复的评论一个手动回复入口（5秒后自动出现）
+            setTimeout(() => {
+                document.querySelectorAll('.reply-editor .loading').forEach(el => {
+                    const parent = el.closest('.reply-editor');
+                    if (parent) {
+                        const id = parent.id.replace('replyEditor_', '');
+                        parent.innerHTML = `
+                            <textarea id="replyText_${id}" placeholder="输入回复内容..."></textarea>
+                            <div class="actions">
+                                <button class="btn btn-primary" onclick="submitReply(${id})">提交回复</button>
+                                <button class="btn btn-danger" onclick="deleteComment(${id})" style="margin-left:auto">删除</button>
+                            </div>
+                        `;
+                    }
+                });
+            }, 5000);
+        }
+
+        async function acceptAiReply(id) {
+            const res = await fetch('/api/comments/' + id + '/accept-ai', {method:'POST'});
+            if (res.ok) loadComments();
+            else alert('操作失败，请重新登录');
+        }
+
+        async function regenAiReply(id) {
+            const res = await fetch('/api/comments/' + id + '/regen-ai', {method:'POST'});
+            if (res.ok) {
+                alert('🔄 已请求重新生成，请稍后刷新查看');
+            }
+        }
+
+        function openEditor(id) {
+            const editor = document.getElementById('replyEditor_' + id);
+            if (editor) {
+                editor.style.display = 'block';
+                editor.innerHTML = `
+                    <textarea id="replyText_${id}" placeholder="输入回复内容..."></textarea>
+                    <div class="actions">
+                        <button class="btn btn-primary" onclick="submitReply(${id})">提交回复</button>
+                        <button class="btn btn-danger" onclick="deleteComment(${id})" style="margin-left:auto">删除</button>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }
         }
 
         async function submitReply(id) {
@@ -156,7 +244,14 @@
             if (res.ok) loadComments();
         }
 
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
+        }
+
         loadComments();
+        // 每 10 秒自动刷新
+        setInterval(loadComments, 10000);
     </script>
 </body>
 </html>
