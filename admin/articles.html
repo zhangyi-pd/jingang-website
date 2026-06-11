@@ -1,0 +1,172 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文章管理 | 金刚般若</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Noto Serif SC', serif;
+            background: #fefaf5; color: #2e241f;
+            display: flex; min-height: 100vh;
+        }
+        .sidebar {
+            width: 220px; background: white; border-right: 1px solid #f3ede6;
+            padding: 32px 20px; flex-shrink: 0;
+        }
+        .sidebar h2 { color: #8b6b4d; font-size: 1.1rem; font-weight: 500; letter-spacing: 1px; margin-bottom: 32px; text-align: center; }
+        .sidebar h2 small { display: block; font-size: 0.75rem; color: #b19274; margin-top: 4px; font-weight: 300; }
+        .nav-item { display: block; padding: 12px 16px; color: #5d4636; text-decoration: none; border-radius: 10px; margin-bottom: 4px; font-size: 0.95rem; transition: all 0.2s; }
+        .nav-item i { width: 24px; color: #b19274; }
+        .nav-item:hover, .nav-item.active { background: #f8f2ea; color: #8b6b4d; }
+        .nav-item.logout { margin-top: 40px; color: #c0392b; }
+        .nav-item.logout:hover { background: #fdf0ed; }
+        .main { flex: 1; padding: 32px 40px; }
+        .main h1 { font-size: 1.5rem; font-weight: 500; color: #7a5a3e; margin-bottom: 24px; }
+        .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .btn {
+            padding: 10px 24px; border: none; border-radius: 10px;
+            font-family: inherit; font-size: 0.9rem; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-primary { background: #8b6b4d; color: white; }
+        .btn-primary:hover { background: #7a5a3e; }
+        .btn-danger { background: #c0392b; color: white; }
+        .btn-danger:hover { background: #a93226; }
+        .btn-secondary { background: #f3ede6; color: #5d4636; }
+        .btn-secondary:hover { background: #e2d9cf; }
+        .article-list { list-style: none; }
+        .article-item {
+            background: white; padding: 20px 24px; border-radius: 12px;
+            border: 1px solid #f3ede6; margin-bottom: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .article-item .info h3 { font-size: 1rem; font-weight: 500; }
+        .article-item .info .meta { font-size: 0.8rem; color: #b19274; margin-top: 4px; }
+        .article-item .actions { display: flex; gap: 8px; }
+        .article-item .actions button { padding: 6px 14px; font-size: 0.8rem; }
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4); align-items: center; justify-content: center; z-index: 100;
+        }
+        .modal.show { display: flex; }
+        .modal-content {
+            background: white; border-radius: 20px; padding: 32px;
+            width: 700px; max-width: 92vw; max-height: 85vh; overflow-y: auto;
+        }
+        .modal-content h2 { color: #7a5a3e; font-size: 1.2rem; margin-bottom: 20px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; color: #5d4636; font-size: 0.9rem; margin-bottom: 6px; }
+        .form-group input, .form-group textarea {
+            width: 100%; padding: 10px 14px; border: 1px solid #e2d9cf;
+            border-radius: 10px; font-family: inherit; font-size: 0.95rem; outline: none;
+        }
+        .form-group textarea { min-height: 80px; resize: vertical; }
+        .form-group textarea.content { min-height: 250px; }
+        .form-group input:focus, .form-group textarea:focus { border-color: #b2753c; }
+        .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>金刚般若<small>内容管理系统</small></h2>
+        <a href="/admin/dashboard.html" class="nav-item"><i class="fas fa-home"></i> 控制台</a>
+        <a href="/admin/articles.html" class="nav-item active"><i class="fas fa-book"></i> 文章管理</a>
+        <a href="/admin/comments.html" class="nav-item"><i class="fas fa-comments"></i> 评论管理</a>
+        <a href="#" class="nav-item logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> 退出登录</a>
+    </div>
+    <div class="main">
+        <h1>📝 文章管理</h1>
+        <div class="toolbar">
+            <span style="color:#b19274;font-size:0.9rem" id="articleCount"></span>
+            <button class="btn btn-primary" onclick="openEditor()"><i class="fas fa-plus"></i> 写新文章</button>
+        </div>
+        <div class="article-list" id="articleList"></div>
+    </div>
+
+    <div class="modal" id="editorModal">
+        <div class="modal-content">
+            <h2 id="editorTitle">写新文章</h2>
+            <input type="hidden" id="editId">
+            <div class="form-group"><label>标题</label><input type="text" id="editTitle" placeholder="文章标题"></div>
+            <div class="form-group"><label>摘要</label><textarea id="editSummary" placeholder="一句话概述"></textarea></div>
+            <div class="form-group"><label>正文（支持HTML）</label><textarea class="content" id="editContent" placeholder="文章内容..."></textarea></div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeEditor()">取消</button>
+                <button class="btn btn-primary" onclick="saveArticle()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function checkAuth() {
+            const res = await fetch('/api/stats');
+            if (!res.ok) window.location.href = '/admin/index.html';
+        }
+        async function logout() { await fetch('/api/logout',{method:'POST'}); window.location.href='/admin/index.html'; }
+
+        async function loadArticles() {
+            const res = await fetch('/api/articles?published_only=false');
+            const articles = await res.json();
+            const list = document.getElementById('articleList');
+            document.getElementById('articleCount').textContent = `共 ${articles.length} 篇文章`;
+            list.innerHTML = articles.map(a => `
+                <div class="article-item">
+                    <div class="info">
+                        <h3>${a.title}</h3>
+                        <div class="meta">${a.date} ${a.published ? '' : '（未发布）'}</div>
+                    </div>
+                    <div class="actions">
+                        <button class="btn btn-secondary" onclick="openEditor(${a.id})">编辑</button>
+                        <button class="btn btn-danger" onclick="deleteArticle(${a.id})">删除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function openEditor(id) {
+            document.getElementById('editorModal').classList.add('show');
+            if (id) {
+                document.getElementById('editorTitle').textContent = '编辑文章';
+                const res = await fetch('/api/articles/' + id);
+                const a = await res.json();
+                document.getElementById('editId').value = a.id;
+                document.getElementById('editTitle').value = a.title;
+                document.getElementById('editSummary').value = a.summary;
+                document.getElementById('editContent').value = a.content;
+            } else {
+                document.getElementById('editorTitle').textContent = '写新文章';
+                document.getElementById('editId').value = '';
+                document.getElementById('editTitle').value = '';
+                document.getElementById('editSummary').value = '';
+                document.getElementById('editContent').value = '';
+            }
+        }
+        function closeEditor() { document.getElementById('editorModal').classList.remove('show'); }
+
+        async function saveArticle() {
+            const id = document.getElementById('editId').value;
+            const data = {
+                title: document.getElementById('editTitle').value,
+                summary: document.getElementById('editSummary').value,
+                content: document.getElementById('editContent').value
+            };
+            const url = id ? '/api/articles/' + id : '/api/articles';
+            const method = id ? 'PUT' : 'POST';
+            const res = await fetch(url, { method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+            if (res.ok) { closeEditor(); loadArticles(); }
+            else { alert('保存失败，请重新登录'); logout(); }
+        }
+
+        async function deleteArticle(id) {
+            if (!confirm('确定要删除这篇文章吗？相关评论也会一起删除。')) return;
+            const res = await fetch('/api/articles/' + id, {method:'DELETE'});
+            if (res.ok) loadArticles();
+        }
+
+        loadArticles();
+    </script>
+</body>
+</html>
