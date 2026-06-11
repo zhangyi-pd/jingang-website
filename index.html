@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -374,6 +374,130 @@ document.querySelectorAll('.nav-links a').forEach(anchor => {
 
 // ========== 初始化 ==========
 loadArticles();
+</script>
+
+<!-- ========== AI 佛学小助理 ========== -->
+<div id="chatWidget" class="chat-widget">
+    <div class="chat-avatar" id="chatAvatar">
+        <span>🙏</span>
+    </div>
+    <div class="chat-panel" id="chatPanel">
+        <div class="chat-header">
+            <div class="chat-avatar-small">🙏</div>
+            <div>
+                <div class="chat-name">贤仪居士 · AI 助理</div>
+                <div class="chat-status">🟢 在线</div>
+            </div>
+            <span class="chat-close" id="chatClose">&times;</span>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <div class="chat-msg bot">
+                <div class="msg-bubble">南无阿弥陀佛 🙏 我是贤仪居士的 AI 助理，欢迎和我讨论佛学问题、交流《金刚经》的感悟。</div>
+            </div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="chatInput" placeholder="输入您的疑问..." autocomplete="off">
+            <button id="chatSend" class="chat-send-btn">发送</button>
+        </div>
+    </div>
+</div>
+
+<style>
+.chat-widget {
+    position: fixed; bottom: 30px; right: 30px; z-index: 9999;
+    font-family: "Noto Serif SC", serif;
+}
+.chat-avatar {
+    width: 60px; height: 60px;
+    background: linear-gradient(135deg, #8b6b4d, #b2753c);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem; cursor: grab;
+    box-shadow: 0 4px 20px rgba(139,107,77,0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative; z-index: 2; user-select: none; touch-action: none;
+}
+.chat-avatar:hover { transform: scale(1.05); box-shadow: 0 6px 28px rgba(139,107,77,0.5); }
+.chat-avatar:active { cursor: grabbing; }
+.chat-panel {
+    display: none; position: absolute; bottom: 70px; right: 0;
+    width: 360px; max-width: 85vw; height: 500px; max-height: 70vh;
+    background: #fefaf5; border-radius: 20px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.12); border: 1px solid #f3ede6;
+    flex-direction: column; overflow: hidden; animation: slideUp 0.3s ease;
+}
+.chat-panel.open { display: flex; }
+@keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.chat-header {
+    padding: 16px 20px; background: linear-gradient(135deg, #8b6b4d, #7a5a3e);
+    color: white; display: flex; align-items: center; gap: 12px;
+    border-radius: 20px 20px 0 0;
+}
+.chat-avatar-small {
+    width: 40px; height: 40px; background: rgba(255,255,255,0.2);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; flex-shrink: 0;
+}
+.chat-name { font-size: 0.95rem; font-weight: 500; }
+.chat-status { font-size: 0.75rem; opacity: 0.8; }
+.chat-close { margin-left: auto; font-size: 1.5rem; cursor: pointer; opacity: 0.7; }
+.chat-close:hover { opacity: 1; }
+.chat-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.chat-msg { display: flex; max-width: 85%; }
+.chat-msg.bot { align-self: flex-start; }
+.chat-msg.user { align-self: flex-end; }
+.msg-bubble { padding: 10px 16px; border-radius: 16px; font-size: 0.9rem; line-height: 1.7; word-break: break-word; }
+.chat-msg.bot .msg-bubble { background: white; color: #2e241f; border: 1px solid #f3ede6; border-bottom-left-radius: 4px; }
+.chat-msg.user .msg-bubble { background: #8b6b4d; color: white; border-bottom-right-radius: 4px; }
+.chat-input-area { padding: 12px 16px; border-top: 1px solid #f3ede6; display: flex; gap: 8px; background: white; }
+.chat-input-area input { flex: 1; padding: 10px 14px; border: 1px solid #e2d9cf; border-radius: 12px; font-family: inherit; font-size: 0.9rem; outline: none; }
+.chat-input-area input:focus { border-color: #b2753c; }
+.chat-send-btn { padding: 10px 20px; background: #8b6b4d; color: white; border: none; border-radius: 12px; font-family: inherit; font-size: 0.85rem; cursor: pointer; }
+.chat-send-btn:hover { background: #7a5a3e; }
+.chat-send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.typing-dots { display: flex; gap: 4px; padding: 4px 0; }
+.typing-dots span { width: 6px; height: 6px; background: #b19274; border-radius: 50%; animation: typing 1.4s infinite; }
+.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typing { 0%,60%,100% { opacity: 0.3; } 30% { opacity: 1; } }
+@media (max-width: 480px) {
+    .chat-widget { bottom: 16px; right: 16px; }
+    .chat-panel { width: calc(100vw - 32px); height: 60vh; bottom: 60px; }
+    .chat-avatar { width: 50px; height: 50px; font-size: 1.3rem; }
+}
+</style>
+<script>
+(function(){
+var avatar=document.getElementById("chatAvatar");
+var panel=document.getElementById("chatPanel");
+var closeBtn=document.getElementById("chatClose");
+var msgs=document.getElementById("chatMessages");
+var input=document.getElementById("chatInput");
+var sendBtn=document.getElementById("chatSend");
+var open=false, dragging=false, sx, sy;
+
+avatar.addEventListener("mousedown",function(e){dragging=true;sx=e.clientX;sy=e.clientY;});
+document.addEventListener("mousemove",function(e){if(!dragging)return;e.preventDefault();avatar.style.transform="translate("+(e.clientX-sx)+"px,"+(e.clientY-sy)+"px)";});
+document.addEventListener("mouseup",function(e){if(!dragging)return;dragging=false;avatar.style.transform="";if(Math.abs(e.clientX-sx)<5&&Math.abs(e.clientY-sy)<5)toggle();});
+
+avatar.addEventListener("touchstart",function(e){var t=e.touches[0];dragging=true;sx=t.clientX;sy=t.clientY;},{passive:false});
+document.addEventListener("touchmove",function(e){if(!dragging)return;e.preventDefault();var t=e.touches[0];avatar.style.transform="translate("+(t.clientX-sx)+"px,"+(t.clientY-sy)+"px)";},{passive:false});
+document.addEventListener("touchend",function(e){if(!dragging)return;dragging=false;avatar.style.transform="";var t=e.changedTouches[0];if(Math.abs(t.clientX-sx)<5&&Math.abs(t.clientY-sy)<5)toggle();});
+
+function toggle(){open=!open;panel.classList.toggle("open",open);if(open)setTimeout(function(){msgs.scrollTop=msgs.scrollHeight;input.focus();},100);}
+closeBtn.onclick=function(){open=false;panel.classList.remove("open");};
+
+var history=[];
+input.onkeydown=function(e){if(e.key=="Enter")send();};
+sendBtn.onclick=send;
+
+function send(){
+var text=input.value.trim();if(!text)return;input.value="";sendBtn.disabled=true;
+addMsg(text,"user");history.push({role:"user",content:text});
+var td=document.createElement("div");td.className="chat-msg bot";td.id="typing";td.innerHTML="<div class=\"msg-bubble\"><div class=\"typing-dots\"><span></span><span></span><span></span></div></div>";msgs.appendChild(td);msgs.scrollTop=msgs.scrollHeight;
+fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:history})}).then(function(r){return r.json();}).then(function(d){var e=document.getElementById("typing");if(e)e.remove();if(d.reply){addMsg(d.reply,"bot");history.push({role:"assistant",content:d.reply});}}).catch(function(){var e=document.getElementById("typing");if(e)e.remove();addMsg("抱歉，请稍后再试 🙏","bot");}).finally(function(){sendBtn.disabled=false;input.focus();});
+}
+function addMsg(t,r){var d=document.createElement("div");d.className="chat-msg "+r;d.innerHTML="<div class=\"msg-bubble\">"+t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")+"</div>";msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;}
+})();
 </script>
 </body>
 </html>
