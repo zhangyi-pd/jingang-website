@@ -130,7 +130,16 @@
             <div class="stat-card"><div class="number" id="statComments">-</div><div class="label">评论总数</div></div>
             <div class="stat-card"><div class="number" id="statUnreplied">-</div><div class="label">待回复</div></div><div class="stat-card"><div class="number" id="statKnowledge">-</div><div class="label">知识素材</div></div><div class="stat-card"><div class="number" id="statTasks">-</div><div class="label">待发任务</div></div>
         </div>
-        <h1 style="margin-top:48px">⚡ 快捷操作</h1>
+                <h1 style="margin-top:48px">💾 数据管理</h1>
+        <div class="quick-links" style="grid-template-columns:repeat(2,1fr)">
+            <a href="#" class="quick-link" onclick="backupData()">
+                <i class="fas fa-download"></i><h3>导出备份</h3><p>下载全部数据的 JSON 备份文件</p>
+            </a>
+            <a href="#" class="quick-link" onclick="document.getElementById('restoreInput').click()">
+                <i class="fas fa-upload"></i><h3>恢复数据</h3><p>从备份文件恢复数据（⚠️ 覆盖当前数据）</p>
+            </a>
+        </div>
+        <input type="file" id="restoreInput" accept=".json" style="display:none">
         <div class="quick-links">
             <a href="/admin/articles.html" class="quick-link">
                 <i class="fas fa-pen"></i><h3>写新文章</h3><p>发布修心感悟</p>
@@ -158,6 +167,35 @@
             window.location.href = '/admin/index.html';
         }
         loadStats();
+        // 数据备份
+        async function backupData() {
+            const res = await fetch('/api/backup');
+            if (!res.ok) { alert('备份失败，请重新登录'); return; }
+            const data = await res.json();
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `jingang_backup_${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            alert('✅ 备份文件已下载！\n建议每次部署前都备份一次。');
+        }
+        
+        // 数据恢复
+        document.getElementById('restoreInput').addEventListener('change', async function() {
+            const file = this.files[0];
+            if (!file || !confirm('⚠️ 恢复将覆盖所有现有数据，确定继续吗？')) { this.value = ''; return; }
+            const text = await file.text();
+            const res = await fetch('/api/restore', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: text
+            });
+            if (res.ok) { alert('✅ 数据恢复成功！页面即将刷新。'); location.reload(); }
+            else { alert('❌ 恢复失败'); }
+            this.value = '';
+        });
     </script>
 </body>
 </html>
