@@ -1,16 +1,18 @@
 ﻿"""数据库管理模块"""
 import sqlite3
 import os
-from datetime import datetime
 
-DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "jingang.db")
+DB_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
+DB_PATH = os.path.join(DB_DIR, "jingang.db")
 
 def get_db():
+    os.makedirs(DB_DIR, exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
 
 def init_db():
+    os.makedirs(DB_DIR, exist_ok=True)
     conn = get_db()
     cursor = conn.cursor()
     
@@ -18,8 +20,8 @@ def init_db():
         CREATE TABLE IF NOT EXISTS articles (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             title TEXT NOT NULL,
-            summary TEXT NOT NULL DEFAULT '',
-            content TEXT NOT NULL DEFAULT '',
+            summary TEXT NOT NULL DEFAULT "",
+            content TEXT NOT NULL DEFAULT "",
             date TEXT NOT NULL,
             published INTEGER NOT NULL DEFAULT 1
         );
@@ -27,9 +29,9 @@ def init_db():
         CREATE TABLE IF NOT EXISTS comments (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             article_id INTEGER NOT NULL,
-            author TEXT NOT NULL DEFAULT '同修',
+            author TEXT NOT NULL DEFAULT "同修",
             content TEXT NOT NULL,
-            reply TEXT DEFAULT '',
+            reply TEXT DEFAULT "",
             created_at TEXT NOT NULL,
             FOREIGN KEY (article_id) REFERENCES articles(id)
         );
@@ -72,7 +74,3 @@ def init_db():
     
     conn.commit()
     conn.close()
-
-if __name__ == "__main__":
-    init_db()
-    print("数据库初始化完成！")
