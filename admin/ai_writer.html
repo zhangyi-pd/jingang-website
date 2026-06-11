@@ -1,0 +1,177 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>AI 发文 | 金刚般若</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Noto Serif SC',serif;background:#fefaf5;color:#2e241f;display:flex;min-height:100vh}
+        .sidebar{width:220px;background:white;border-right:1px solid #f3ede6;padding:32px 20px;flex-shrink:0}
+        .sidebar h2{color:#8b6b4d;font-size:1.1rem;font-weight:500;letter-spacing:1px;margin-bottom:32px;text-align:center}
+        .sidebar h2 small{display:block;font-size:.75rem;color:#b19274;margin-top:4px;font-weight:300}
+        .nav-item{display:block;padding:12px 16px;color:#5d4636;text-decoration:none;border-radius:10px;margin-bottom:4px;font-size:.95rem;transition:all .2s}
+        .nav-item i{width:24px;color:#b19274}.nav-item:hover,.nav-item.active{background:#f8f2ea;color:#8b6b4d}
+        .nav-item.logout{margin-top:40px;color:#c0392b}.nav-item.logout:hover{background:#fdf0ed}
+        .main{flex:1;padding:32px 40px}
+        .main h1{font-size:1.5rem;font-weight:500;color:#7a5a3e;margin-bottom:24px}
+        .card{background:white;border-radius:16px;border:1px solid #f3ede6;padding:28px;margin-bottom:20px}
+        .card h2{font-size:1.1rem;font-weight:500;color:#5d4636;margin-bottom:16px}
+        .form-group{margin-bottom:16px}
+        .form-group label{display:block;color:#5d4636;font-size:.9rem;margin-bottom:6px}
+        .form-group input,.form-group textarea{width:100%;padding:10px 14px;border:1px solid #e2d9cf;border-radius:10px;font-family:inherit;font-size:.95rem;outline:none}
+        .form-group textarea{min-height:80px;resize:vertical}
+        .form-group input:focus,.form-group textarea:focus{border-color:#b2753c}
+        .btn{padding:10px 20px;border:none;border-radius:10px;font-family:inherit;font-size:.9rem;cursor:pointer;transition:all .2s}
+        .btn-primary{background:#8b6b4d;color:white}.btn-primary:hover{background:#7a5a3e}
+        .btn-success{background:#4caf50;color:white}.btn-success:hover{background:#388e3c}
+        .btn-secondary{background:#f3ede6;color:#5d4636}.btn-secondary:hover{background:#e2d9cf}
+        .btn-danger{background:#e74c3c;color:white;padding:4px 10px;font-size:.8rem}.btn-danger:hover{background:#c0392b}
+        .btn-sm{padding:6px 14px;font-size:.82rem}
+        .flex{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+        .preview-box{background:#f8f2ea;border-radius:12px;padding:20px;margin-top:16px;display:none}
+        .preview-box.show{display:block}
+        .preview-box .label{font-size:.85rem;color:#8b6b4d;font-weight:500;margin-bottom:8px}
+        .preview-title{font-size:1.2rem;font-weight:500;color:#5d4636;margin-bottom:4px}
+        .preview-summary{font-size:.88rem;color:#b19274;margin-bottom:12px}
+        .preview-body{font-size:.95rem;line-height:2;color:#2e241f}
+        .task-list{list-style:none}
+        .task-item{background:white;padding:16px 20px;border-radius:12px;border:1px solid #f3ede6;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+        .task-item .info h4{font-size:.95rem;font-weight:500}
+        .task-item .info .meta{font-size:.8rem;color:#b19274;margin-top:2px}
+        .badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:.75rem;margin-left:6px}
+        .badge-pending{background:#fef3e0;color:#b2753c}
+        .badge-done{background:#e8f5e9;color:#388e3c}
+        .badge-failed{background:#fbe9e7;color:#c0392b}
+        .loading{color:#b19274;font-size:.85rem}
+        .hint{font-size:.8rem;color:#b19274;margin-top:4px}
+        .row{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+        @media(max-width:768px){.row{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+<div class="sidebar">
+    <h2>金刚般若<small>内容管理系统</small></h2>
+    <a href="/admin/dashboard.html" class="nav-item"><i class="fas fa-home"></i> 控制台</a>
+    <a href="/admin/articles.html" class="nav-item"><i class="fas fa-book"></i> 文章管理</a>
+    <a href="/admin/knowledge.html" class="nav-item"><i class="fas fa-database"></i> 知识库</a>
+    <a href="/admin/ai_writer.html" class="nav-item active"><i class="fas fa-robot"></i> AI 发文</a>
+    <a href="/admin/comments.html" class="nav-item"><i class="fas fa-comments"></i> 评论管理</a>
+    <a href="#" class="nav-item logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> 退出登录</a>
+</div>
+<div class="main">
+    <h1>🤖 AI 自动采编发文</h1>
+    
+    <div class="row">
+        <div class="card">
+            <h2>✍️ 生成并发布</h2>
+            <div class="form-group">
+                <label>发文主题</label>
+                <input id="topic" placeholder="如：持诵金刚经的好处、谈谈应无所住...">
+                <div class="hint">AI 会先搜索知识库，再结合自身知识生成文章</div>
+            </div>
+            <div class="form-group">
+                <label>定时发布时间</label>
+                <input type="datetime-local" id="publishTime">
+                <div class="hint">留空则立即生成并发布</div>
+            </div>
+            <div class="flex">
+                <button class="btn btn-secondary" onclick="previewArticle()"><i class="fas fa-eye"></i> 预览</button>
+                <button class="btn btn-success" onclick="publishArticle()"><i class="fas fa-clock"></i> 定时发布</button>
+            </div>
+            <div class="preview-box" id="previewBox">
+                <div class="label">📝 AI 生成预览</div>
+                <div class="preview-title" id="previewTitle"></div>
+                <div class="preview-summary" id="previewSummary"></div>
+                <div class="preview-body" id="previewBody"></div>
+                <div class="flex" style="margin-top:12px">
+                    <button class="btn btn-sm btn-primary" onclick="publishNow()"><i class="fas fa-save"></i> 直接发布</button>
+                    <button class="btn btn-sm btn-secondary" onclick="document.getElementById('previewBox').classList.remove('show')">关闭</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>📋 发布任务列表</h2>
+            <div id="taskList"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let lastPreview = null;
+    
+    async function checkAuth(){const r=await fetch('/api/stats');if(!r.ok)window.location.href='/admin/index.html'}
+    async function logout(){await fetch('/api/logout',{method:'POST'});window.location.href='/admin/index.html'}
+    
+    async function previewArticle(){
+        const topic=document.getElementById('topic').value.trim();
+        if(!topic){alert('请输入发文主题');return}
+        document.getElementById('previewBox').classList.remove('show');
+        const res=await fetch('/api/ai/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({topic,publish_at:''})});
+        if(!res.ok){alert('生成失败，请重新登录');return}
+        const data=await res.json();
+        lastPreview=data;
+        document.getElementById('previewTitle').textContent=data.title||'(无标题)';
+        document.getElementById('previewSummary').textContent=data.summary||'(无摘要)';
+        document.getElementById('previewBody').innerHTML=data.content||'<p>(生成失败)</p>';
+        document.getElementById('previewBox').classList.add('show');
+    }
+    
+    async function publishArticle(){
+        const topic=document.getElementById('topic').value.trim();
+        let publishAt=document.getElementById('publishTime').value;
+        if(!topic){alert('请输入发文主题');return}
+        if(!publishAt){
+            // 立即发布
+            const res=await fetch('/api/ai/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({topic,publish_at:''})});
+            if(!res.ok){alert('生成失败');return}
+            const data=await res.json();
+            // 直接保存为文章
+            const r2=await fetch('/api/articles',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:data.title||topic,summary:data.summary||'',content:data.content||''})});
+            if(r2.ok){alert('✅ 文章已发布！');loadTasks()}
+            return;
+        }
+        // 定时发布
+        const publishAtStr=publishAt.replace('T',' ')+':00';
+        const res=await fetch('/api/ai/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({topic,publish_at:publishAtStr})});
+        if(res.ok){alert('✅ 已创建定时发布任务！');document.getElementById('publishTime').value='';loadTasks()}
+    }
+    
+    async function publishNow(){
+        if(!lastPreview)return;
+        const r=await fetch('/api/articles',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:lastPreview.title,summary:lastPreview.summary,content:lastPreview.content})});
+        if(r.ok){alert('✅ 文章已发布！');document.getElementById('previewBox').classList.remove('show');loadTasks()}
+    }
+    
+    async function loadTasks(){
+        const res=await fetch('/api/ai/tasks');
+        if(!res.ok)return;
+        const tasks=await res.json();
+        const list=document.getElementById('taskList');
+        if(tasks.length===0){list.innerHTML='<div class="loading" style="text-align:center;padding:20px">暂无发布任务</div>';return}
+        list.innerHTML=tasks.map(t=>{
+            const statusMap={'pending':'⏳ 待发布','published':'✅ 已发布','failed':'❌ 失败'};
+            const badgeMap={'pending':'badge-pending','published':'badge-done','failed':'badge-failed'};
+            return `<div class="task-item">
+                <div class="info">
+                    <h4>${escapeHtml(t.topic)} <span class="badge ${badgeMap[t.status]}">${statusMap[t.status]||t.status}</span></h4>
+                    <div class="meta">${t.publish_at}</div>
+                </div>
+                <button class="btn btn-danger btn-sm" onclick="deleteTask(${t.id})">删除</button>
+            </div>`;
+        }).join('');
+    }
+    
+    async function deleteTask(id){
+        if(!confirm('确定要删除这个任务吗？'))return;
+        const res=await fetch('/api/ai/tasks/'+id,{method:'DELETE'});
+        if(res.ok)loadTasks();
+    }
+    
+    function escapeHtml(s){if(!s)return '';return s.replace(/[&<>]/g,m=>m==='&'?'&amp;':m==='<'?'&lt;':'&gt;')}
+    loadTasks();
+</script>
+</body>
+</html>
