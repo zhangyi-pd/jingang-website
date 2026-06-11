@@ -1,0 +1,162 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>评论管理 | 金刚般若</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Noto Serif SC', serif;
+            background: #fefaf5; color: #2e241f;
+            display: flex; min-height: 100vh;
+        }
+        .sidebar {
+            width: 220px; background: white; border-right: 1px solid #f3ede6;
+            padding: 32px 20px; flex-shrink: 0;
+        }
+        .sidebar h2 { color: #8b6b4d; font-size: 1.1rem; font-weight: 500; letter-spacing: 1px; margin-bottom: 32px; text-align: center; }
+        .sidebar h2 small { display: block; font-size: 0.75rem; color: #b19274; margin-top: 4px; font-weight: 300; }
+        .nav-item { display: block; padding: 12px 16px; color: #5d4636; text-decoration: none; border-radius: 10px; margin-bottom: 4px; font-size: 0.95rem; transition: all 0.2s; }
+        .nav-item i { width: 24px; color: #b19274; }
+        .nav-item:hover, .nav-item.active { background: #f8f2ea; color: #8b6b4d; }
+        .nav-item.logout { margin-top: 40px; color: #c0392b; }
+        .nav-item.logout:hover { background: #fdf0ed; }
+        .main { flex: 1; padding: 32px 40px; }
+        .main h1 { font-size: 1.5rem; font-weight: 500; color: #7a5a3e; margin-bottom: 24px; }
+        .filter-bar { margin-bottom: 20px; }
+        .filter-bar select {
+            padding: 8px 16px; border: 1px solid #e2d9cf; border-radius: 10px;
+            font-family: inherit; font-size: 0.9rem; outline: none;
+        }
+        .comment-card {
+            background: white; padding: 20px 24px; border-radius: 12px;
+            border: 1px solid #f3ede6; margin-bottom: 12px;
+        }
+        .comment-card .header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 8px;
+        }
+        .comment-card .author { font-weight: 500; font-size: 0.95rem; }
+        .comment-card .article-link { font-size: 0.8rem; color: #b19274; }
+        .comment-card .time { font-size: 0.8rem; color: #b19274; }
+        .comment-card .content { font-size: 0.95rem; line-height: 1.6; margin-bottom: 12px; color: #2e241f; }
+        .comment-card .reply-box {
+            background: #f8f2ea; padding: 14px 18px; border-radius: 10px;
+            margin-top: 8px; border-left: 3px solid #dbbd9a;
+        }
+        .comment-card .reply-box .label { font-size: 0.8rem; color: #8b6b4d; font-weight: 500; margin-bottom: 4px; }
+        .comment-card .reply-box .text { font-size: 0.9rem; color: #5d4636; }
+        .reply-editor { margin-top: 12px; display: none; }
+        .reply-editor textarea {
+            width: 100%; padding: 10px 14px; border: 1px solid #e2d9cf;
+            border-radius: 10px; font-family: inherit; font-size: 0.9rem;
+            min-height: 80px; outline: none; resize: vertical;
+        }
+        .reply-editor textarea:focus { border-color: #b2753c; }
+        .reply-editor .actions { margin-top: 8px; display: flex; gap: 8px; }
+        .btn {
+            padding: 8px 18px; border: none; border-radius: 10px;
+            font-family: inherit; font-size: 0.85rem; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-primary { background: #8b6b4d; color: white; }
+        .btn-primary:hover { background: #7a5a3e; }
+        .btn-secondary { background: #f3ede6; color: #5d4636; }
+        .btn-secondary:hover { background: #e2d9cf; }
+        .btn-danger { background: #e74c3c; color: white; font-size: 0.8rem; padding: 4px 10px; }
+        .btn-danger:hover { background: #c0392b; }
+        .badge {
+            display: inline-block; padding: 2px 10px; border-radius: 20px;
+            font-size: 0.75rem; margin-left: 8px;
+        }
+        .badge-pending { background: #fef3e0; color: #b2753c; }
+        .badge-done { background: #e8f5e9; color: #388e3c; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>金刚般若<small>内容管理系统</small></h2>
+        <a href="/admin/dashboard.html" class="nav-item"><i class="fas fa-home"></i> 控制台</a>
+        <a href="/admin/articles.html" class="nav-item"><i class="fas fa-book"></i> 文章管理</a>
+        <a href="/admin/comments.html" class="nav-item active"><i class="fas fa-comments"></i> 评论管理</a>
+        <a href="#" class="nav-item logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> 退出登录</a>
+    </div>
+    <div class="main">
+        <h1>💬 评论管理</h1>
+        <div class="filter-bar">
+            <select id="filterSelect" onchange="loadComments()">
+                <option value="all">全部评论</option>
+                <option value="pending">待回复</option>
+                <option value="replied">已回复</option>
+            </select>
+            <span style="margin-left:12px;color:#b19274;font-size:0.85rem" id="commentCount"></span>
+        </div>
+        <div id="commentList"></div>
+    </div>
+    <script>
+        async function checkAuth() {
+            const res = await fetch('/api/stats');
+            if (!res.ok) window.location.href = '/admin/index.html';
+        }
+        async function logout() { await fetch('/api/logout',{method:'POST'}); window.location.href='/admin/index.html'; }
+
+        async function loadComments() {
+            const res = await fetch('/api/comments');
+            let comments = await res.json();
+            const filter = document.getElementById('filterSelect').value;
+            if (filter === 'pending') comments = comments.filter(c => !c.reply);
+            else if (filter === 'replied') comments = comments.filter(c => c.reply);
+            
+            document.getElementById('commentCount').textContent = `共 ${comments.length} 条`;
+            const list = document.getElementById('commentList');
+            list.innerHTML = comments.map(c => `
+                <div class="comment-card">
+                    <div class="header">
+                        <div>
+                            <span class="author">${c.author}</span>
+                            <span class="article-link">于「${c.article_title || '未知文章'}」</span>
+                            ${c.reply ? '<span class="badge badge-done">已回复</span>' : '<span class="badge badge-pending">待回复</span>'}
+                        </div>
+                        <span class="time">${c.created_at}</span>
+                    </div>
+                    <div class="content">${c.content}</div>
+                    ${c.reply ? `
+                        <div class="reply-box">
+                            <div class="label">🙏 贤仪居士的回复：</div>
+                            <div class="text">${c.reply}</div>
+                        </div>
+                    ` : ''}
+                    <div class="reply-editor" id="replyEditor_${c.id}" style="${c.reply ? 'display:none' : 'display:block'}">
+                        <textarea id="replyText_${c.id}" placeholder="输入回复内容...">${c.reply || ''}</textarea>
+                        <div class="actions">
+                            <button class="btn btn-primary" onclick="submitReply(${c.id})">提交回复</button>
+                            <button class="btn btn-danger" onclick="deleteComment(${c.id})" style="margin-left:auto">删除</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function submitReply(id) {
+            const reply = document.getElementById('replyText_' + id).value.trim();
+            if (!reply) { alert('请输入回复内容'); return; }
+            const res = await fetch('/api/comments/' + id + '/reply', {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ reply })
+            });
+            if (res.ok) loadComments();
+        }
+
+        async function deleteComment(id) {
+            if (!confirm('确定要删除这条评论吗？')) return;
+            const res = await fetch('/api/comments/' + id, {method:'DELETE'});
+            if (res.ok) loadComments();
+        }
+
+        loadComments();
+    </script>
+</body>
+</html>
