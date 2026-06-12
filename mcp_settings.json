@@ -1,0 +1,11 @@
+﻿{
+    "mcpServers": {
+        "jingang-website": {
+            "command": "python",
+            "args": ["D:/codexproject/jingang-website/mcp_server.py"],
+            "env": {},
+            "disabled": false,
+            "autoApprove": []
+        }
+    }
+}
