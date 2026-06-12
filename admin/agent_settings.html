@@ -1,0 +1,205 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>Agent 配置 | 金刚般若</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:"Noto Serif SC",serif;background:#fefaf5;color:#2e241f;display:flex;min-height:100vh}
+        .sidebar{width:220px;background:white;border-right:1px solid #f3ede6;padding:32px 20px;flex-shrink:0}
+        .sidebar h2{color:#8b6b4d;font-size:1.1rem;font-weight:500;letter-spacing:1px;margin-bottom:32px;text-align:center}
+        .sidebar h2 small{display:block;font-size:.75rem;color:#b19274;margin-top:4px;font-weight:300}
+        .nav-item{display:block;padding:12px 16px;color:#5d4636;text-decoration:none;border-radius:10px;margin-bottom:4px;font-size:.95rem;transition:all .2s}
+        .nav-item i{width:24px;color:#b19274}.nav-item:hover,.nav-item.active{background:#f8f2ea;color:#8b6b4d}
+        .nav-item.logout{margin-top:40px;color:#c0392b}.nav-item.logout:hover{background:#fdf0ed}
+        .main{flex:1;padding:32px 40px;max-width:900px}
+        .main h1{font-size:1.5rem;font-weight:500;color:#7a5a3e;margin-bottom:8px}
+        .main .desc{font-size:.85rem;color:#b19274;margin-bottom:28px}
+        .card{background:white;border-radius:16px;border:1px solid #f3ede6;padding:24px;margin-bottom:16px}
+        .card h2{font-size:1.05rem;font-weight:500;color:#5d4636;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+        .card h2 i{color:#b2753c;font-size:1.1rem}
+        .setting-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f8f2ea}
+        .setting-row:last-child{border-bottom:none}
+        .setting-label{font-size:.9rem;color:#5d4636}
+        .setting-hint{font-size:.78rem;color:#b19274;margin-top:2px}
+        .setting-control{flex-shrink:0}
+        select{padding:6px 12px;border:1px solid #e2d9cf;border-radius:8px;font-family:inherit;font-size:.85rem;outline:none;background:white;min-width:100px}
+        select:focus{border-color:#b2753c}
+        input[type="range"]{width:120px;accent-color:#8b6b4d;vertical-align:middle}
+        input[type="text"],textarea{padding:8px 12px;border:1px solid #e2d9cf;border-radius:8px;font-family:inherit;font-size:.85rem;outline:none;width:200px}
+        input[type="text"]:focus,textarea:focus{border-color:#b2753c}
+        textarea{width:100%;min-height:60px;resize:vertical;font-size:.85rem}
+        .toggle{position:relative;display:inline-block;width:44px;height:24px;cursor:pointer}
+        .toggle input{opacity:0;width:0;height:0}
+        .toggle .slider{position:absolute;inset:0;background:#ddd;border-radius:24px;transition:.3s}
+        .toggle .slider::before{content:"";position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:white;border-radius:50%;transition:.3s}
+        .toggle input:checked+.slider{background:#8b6b4d}
+        .toggle input:checked+.slider::before{transform:translateX(20px)}
+        .range-value{display:inline-block;min-width:30px;text-align:center;font-size:.85rem;color:#8b6b4d;font-weight:500}
+        .btn{padding:10px 28px;border:none;border-radius:10px;font-family:inherit;font-size:.9rem;cursor:pointer;transition:all .2s}
+        .btn-primary{background:#8b6b4d;color:white;margin-top:16px}
+        .btn-primary:hover{background:#7a5a3e}
+        .toast{position:fixed;top:20px;right:20px;background:#4caf50;color:white;padding:12px 24px;border-radius:12px;font-size:.9rem;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,.15);display:none;animation:slideIn .3s}
+        @keyframes slideIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+        @media(max-width:768px){.setting-row{flex-direction:column;align-items:flex-start;gap:8px}.main{padding:20px}}
+        .tag{font-size:.7rem;padding:2px 8px;border-radius:6px;background:#e8f5e9;color:#388e3c;margin-left:8px}
+    </style>
+</head>
+<body>
+<div class="sidebar">
+    <h2>金刚般若<small>内容管理系统</small></h2>
+    <a href="/admin/dashboard.html" class="nav-item"><i class="fas fa-home"></i> 控制台</a>
+    <a href="/admin/articles.html" class="nav-item"><i class="fas fa-book"></i> 文章管理</a>
+    <a href="/admin/knowledge.html" class="nav-item"><i class="fas fa-database"></i> 知识库</a>
+    <a href="/admin/ai_writer.html" class="nav-item"><i class="fas fa-robot"></i> AI 发文</a>
+    <a href="/admin/comments.html" class="nav-item"><i class="fas fa-comments"></i> 评论管理</a>
+    <a href="/admin/agent_settings.html" class="nav-item active"><i class="fas fa-sliders-h"></i> Agent 配置</a>
+    <a href="#" class="nav-item logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> 退出登录</a>
+</div>
+<div class="main">
+    <h1>🤖 Agent 配置中心</h1>
+    <p class="desc">调节 AI 的行为参数，控制每个 Agent 的性格、风格和工作方式。</p>
+
+    <div class="card">
+        <h2><i class="fas fa-comment-dots"></i> 佛学小助理 <span class="tag">网站右下角聊天</span></h2>
+        <div class="setting-row">
+            <div><div class="setting-label">启用</div><div class="setting-hint">在网站右下角显示聊天按钮</div></div>
+            <label class="toggle"><input type="checkbox" id="chat_bot_enabled"><span class="slider"></span></label>
+        </div>
+        <div class="setting-row">
+            <div><div class="setting-label">回复风格</div><div class="setting-hint">控制 AI 的语气和表达方式</div></div>
+            <select id="chat_bot_style"><option value="温和">🌸 温和（默认）</option><option value="严谨">📖 严谨</option><option value="活泼">✨ 活泼</option></select>
+        </div>
+        <div class="setting-row">
+            <div><div class="setting-label">知识库优先</div><div class="setting-hint">回答时优先检索知识库中的内容</div></div>
+            <label class="toggle"><input type="checkbox" id="chat_bot_knowledge_first"><span class="slider"></span></label>
+        </div>
+        <div class="setting-row">
+            <div><div class="setting-label">最大回复字数</div><div class="setting-hint">限制单次回答的长度</div></div>
+            <div><input type="range" id="chat_bot_max_length" min="50" max="500" step="50"><span class="range-value" id="chatLengthVal">200</span></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2><i class="fas fa-reply-all"></i> AI 自动回复评论 <span class="tag">留言自动应答</span></h2>
+        <div class="setting-row">
+            <div><div class="setting-label">启用</div><div class="setting-hint">新评论到达时自动生成 AI 回复</div></div>
+            <label class="toggle"><input type="checkbox" id="auto_reply_enabled"><span class="slider"></span></label>
+        </div>
+        <div class="setting-row">
+            <div><div class="setting-label">发布方式</div><div class="setting-hint">AI 回复是否直接显示，还是需要你审核</div></div>
+            <select id="auto_reply_requires_review"><option value="true">🛡️ 需审核后发布</option><option value="false">🚀 自动直接发布</option></select>
+        </div>
+        <div class="setting-row">
+            <div><div class="setting-label">回复风格</div><div class="setting-hint">AI 回复的语气</div></div>
+            <select id="auto_reply_style"><option value="温和">🌸 温和</option><option value="严谨">📖 严谨</option><option value="活泼">✨ 活泼</option></select>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2><i class="fas fa-pen-fancy"></i> AI 自动发文 <span class="tag">定时生成文章</span></h2>
+        <div class="setting-row">
+            <div><div class="setting-label">启用</div><div class="setting-hint">允许 AI 定时生成并发布文章</div></div>
+            <label class="toggle"><input type="checkbox" id="auto_writer_enabled"><span class="slider"></span></label>
+        </div>
+        <div class="setting-row">
+            <div><div class="setting-label">知识库优先</div><div class="setting-hint">写文章时优先从知识库取材</div></div>
+            <label class="toggle"><input type="checkbox" id="auto_writer_knowledge_first"><span class="slider"></span></label>
+        </div>
+        <div class="setting-row">
+            <div><div class="setting-label">写作风格</div><div class="setting-hint">文章的语气和风格</div></div>
+            <select id="auto_writer_style"><option value="温和">🌸 温和</option><option value="严谨">📖 严谨</option><option value="活泼">✨ 活泼</option></select>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2><i class="fas fa-database"></i> 知识库</h2>
+        <div class="setting-row">
+            <div><div class="setting-label">知识库权重</div><div class="setting-hint">值越大，AI 越倾向于使用知识库内容而非自己的知识</div></div>
+            <div><input type="range" id="knowledge_priority" min="0" max="100" step="10"><span class="range-value" id="knowledgeVal">50</span></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2><i class="fas fa-robot"></i> Agent 身份设定</h2>
+        <div class="setting-row" style="flex-direction:column;align-items:stretch">
+            <div class="setting-label" style="margin-bottom:8px">系统提示词</div>
+            <div class="setting-hint" style="margin-bottom:8px">定义 AI 的身份、性格和行为准则，影响所有 Agent 的表现</div>
+            <textarea id="agent_identity"></textarea>
+        </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="saveSettings()"><i class="fas fa-save"></i> 保存配置</button>
+</div>
+
+<div class="toast" id="toast">✅ 配置已保存</div>
+
+<script>
+async function checkAuth(){const r=await fetch('/api/stats');if(!r.ok)window.location.href='/admin/index.html'}
+async function logout(){await fetch('/api/logout',{method:'POST'});window.location.href='/admin/index.html'}
+
+async function loadSettings(){
+    const res=await fetch('/api/settings');
+    if(!res.ok)return;
+    const s=await res.json();
+    // 开关
+    document.getElementById('chat_bot_enabled').checked=s.chat_bot_enabled==='true';
+    document.getElementById('chat_bot_knowledge_first').checked=s.chat_bot_knowledge_first==='true';
+    document.getElementById('auto_reply_enabled').checked=s.auto_reply_enabled==='true';
+    document.getElementById('auto_reply_requires_review').value=s.auto_reply_requires_review;
+    document.getElementById('auto_writer_enabled').checked=s.auto_writer_enabled==='true';
+    document.getElementById('auto_writer_knowledge_first').checked=s.auto_writer_knowledge_first==='true';
+    // 下拉
+    document.getElementById('chat_bot_style').value=s.chat_bot_style;
+    document.getElementById('auto_reply_style').value=s.auto_reply_style;
+    document.getElementById('auto_writer_style').value=s.auto_writer_style;
+    // 滑块
+    document.getElementById('chat_bot_max_length').value=s.chat_bot_max_length;
+    document.getElementById('chatLengthVal').textContent=s.chat_bot_max_length;
+    document.getElementById('knowledge_priority').value=s.knowledge_priority;
+    document.getElementById('knowledgeVal').textContent=s.knowledge_priority;
+    // 文本
+    document.getElementById('agent_identity').value=s.agent_identity;
+}
+
+// 滑块实时显示
+document.getElementById('chat_bot_max_length').addEventListener('input',function(){
+    document.getElementById('chatLengthVal').textContent=this.value;
+});
+document.getElementById('knowledge_priority').addEventListener('input',function(){
+    document.getElementById('knowledgeVal').textContent=this.value;
+});
+
+async function saveSettings(){
+    const data={
+        chat_bot_enabled: document.getElementById('chat_bot_enabled').checked?'true':'false',
+        chat_bot_style: document.getElementById('chat_bot_style').value,
+        chat_bot_knowledge_first: document.getElementById('chat_bot_knowledge_first').checked?'true':'false',
+        chat_bot_max_length: document.getElementById('chat_bot_max_length').value,
+        auto_reply_enabled: document.getElementById('auto_reply_enabled').checked?'true':'false',
+        auto_reply_requires_review: document.getElementById('auto_reply_requires_review').value,
+        auto_reply_style: document.getElementById('auto_reply_style').value,
+        auto_writer_enabled: document.getElementById('auto_writer_enabled').checked?'true':'false',
+        auto_writer_knowledge_first: document.getElementById('auto_writer_knowledge_first').checked?'true':'false',
+        auto_writer_style: document.getElementById('auto_writer_style').value,
+        knowledge_priority: document.getElementById('knowledge_priority').value,
+        agent_identity: document.getElementById('agent_identity').value,
+    };
+    const res=await fetch('/api/settings',{
+        method:'PUT',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(data)
+    });
+    if(res.ok){
+        const toast=document.getElementById('toast');
+        toast.style.display='block';
+        setTimeout(()=>toast.style.display='none',2000);
+    }
+}
+
+loadSettings();
+</script>
+</body>
+</html>
