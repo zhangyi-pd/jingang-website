@@ -36,7 +36,7 @@ def startup():
     except Exception as e:
         print(f'[备份] 自动恢复异常: {e}')
 
-app.mount("/admin", StaticFiles(directory=str(BASE_DIR / "admin"), html=True), name="admin")
+app.mount("/admin", StaticFiles(directory=str(BASE_DIR / "admin"), html=True), name="admin")`napp.mount("/mcp", mcp_app.mcp_app, name="mcp")
 
 class ArticleIn(BaseModel): title: str; summary: str; content: str
 class CommentIn(BaseModel): article_id: int; author: str; content: str
@@ -312,21 +312,8 @@ def delete_comment(cid: int, request: Request):
     return {"ok": True}
 
 @app.post("/api/chat")
-@app.post("/mcp")
-def mcp_endpoint(data: dict):
-    """MCP Server HTTP 端点 — 让 AI 客户端可以通过 HTTP 访问网站数据"""
-    return mcp_handler.handle_mcp_request(data)
 
-@app.get("/mcp")
-def mcp_info():
-    return {
-        "server": "jingang-mcp",
-        "version": "1.0.0",
-        "protocol": "MCP 2024-11-05",
-        "tools": list(mcp_handler.TOOLS.keys()),
-        "usage": "POST /mcp  with JSON-RPC body",
-        "example_tool_list": 'curl -X POST https://your-domain/mcp -H "Content-Type: application/json" -d \'{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}\''
-    }
+@app.post('/api/chat')
 def chat_with_ai(data: dict):
     """与佛学小助理对话"""
     messages = data.get("messages", [])
