@@ -1,4 +1,4 @@
-﻿"""MCP 客户端使用教程
+"""MCP 客户端使用教程
 教你如何连接到任何 MCP Server，读取工具列表并调用工具。
 
 用法：
@@ -27,7 +27,7 @@ def mcp_request(url, method, params=None):
     }
     data = json.dumps(body).encode("utf-8")
     req = urllib.request.Request(
-        url.rstrip("/") + "/mcp",
+        url.rstrip("/") + "/mcp/",
         data=data,
         headers={"Content-Type": "application/json"},
         method="POST"
@@ -43,7 +43,7 @@ def mcp_request(url, method, params=None):
 
 def list_tools(url):
     """列出 MCP Server 的所有工具"""
-    print(f"🔍 连接到: {url}/mcp")
+    print(f"[查找] 连接到: {url}/mcp")
     print()
     
     # 1. 初始化
@@ -52,9 +52,9 @@ def list_tools(url):
         "capabilities": {}
     })
     if "error" in init_resp:
-        print(f"❌ 初始化失败: {init_resp['error']}")
+        print(f"[失败] 初始化失败: {init_resp['error']}")
         return
-    print("✅ 连接成功！")
+    print("[OK] 连接成功！")
     print(f"   Server: {init_resp.get('result',{}).get('serverInfo',{}).get('name','unknown')}")
     print(f"   协议: {init_resp.get('result',{}).get('protocolVersion','unknown')}")
     print()
@@ -62,15 +62,15 @@ def list_tools(url):
     # 2. 获取工具列表
     tools_resp = mcp_request(url, "tools/list")
     if "error" in tools_resp:
-        print(f"❌ 获取工具列表失败: {tools_resp['error']}")
+        print(f"[失败] 获取工具列表失败: {tools_resp['error']}")
         return
     
     tools = tools_resp.get("result", {}).get("tools", [])
-    print(f"📦 共 {len(tools)} 个工具可用：")
+    print(f"[工具] 共 {len(tools)} 个工具可用：")
     print()
     for t in tools:
-        print(f"  🛠️  {t['name']}")
-        print(f"     📝 {t.get('description', '无描述')}")
+        print(f"    -  {t['name']}")
+        print(f"         说明: {t.get('description', '无描述')}")
         schema = t.get("inputSchema", {})
         if schema.get("properties"):
             print(f"     参数: {', '.join(schema['properties'].keys())}")
@@ -78,8 +78,8 @@ def list_tools(url):
 
 def call_tool(url, tool_name, params=None):
     """调用 MCP Server 的某个工具"""
-    print(f"🔧 调用工具: {tool_name}")
-    print(f"📤 参数: {json.dumps(params, ensure_ascii=False)}")
+    print(f"[调用] 调用工具: {tool_name}")
+    print(f"  参数: 参数: {json.dumps(params, ensure_ascii=False)}")
     print()
     
     # 先初始化
@@ -95,7 +95,7 @@ def call_tool(url, tool_name, params=None):
     })
     
     if "error" in resp:
-        print(f"❌ 调用失败: {resp['error']}")
+        print(f"[失败] 调用失败: {resp['error']}")
         return
     
     content = resp.get("result", {}).get("content", [])
@@ -110,7 +110,7 @@ def call_tool(url, tool_name, params=None):
 def demo(url):
     """完整的演示流程"""
     print("=" * 50)
-    print("🤖 MCP 协议完整演示")
+    print("[MCP] MCP 协议完整演示")
     print("=" * 50)
     print()
     
@@ -119,28 +119,61 @@ def demo(url):
     
     # 2. 调用 get_stats
     print("=" * 50)
-    print("📊 示例：获取网站统计")
+    print("[统计] 示例：获取网站统计")
     print("=" * 50)
     call_tool(url, "get_stats")
     print()
     
     # 3. 调用 list_articles
     print("=" * 50)
-    print("📝 示例：获取文章列表")
+    print("    说明: 示例：获取文章列表")
     print("=" * 50)
     call_tool(url, "list_articles")
     print()
     
     # 4. 搜索知识库
     print("=" * 50)
-    print("📚 示例：搜索知识库")
+    print("[知识库] 示例：搜索知识库")
     print("=" * 50)
     call_tool(url, "search_knowledge", {"keyword": "金刚经"})
     print()
     
-    print("✅ 演示完成！")
+    print("[OK] 演示完成！")
 
-if __name__ == "__main__":
+
+def create_demo_article(url):
+    """演示：通过 MCP 创建文章"""
+    print("=" * 50)
+    print("MCP 写入演示：创建一篇文章")
+    print("=" * 50)
+    import random
+    result = mcp_request(url, "tools/call", {
+        "name": "create_article",
+        "arguments": {
+            "title": "MCP 测试文章 - AI 自动创建",
+            "summary": "这是一条通过 MCP 协议自动创建的文章",
+            "content": "<p>这篇文章是通过 MCP 客户端调用 create_article 工具自动创建的。</p><p>任何有权限的 AI 客户端都可以通过 MCP 协议向这个网站写入数据。</p>"
+        }
+    })
+    content = result.get("result", {}).get("content", [])
+    for item in content:
+        if item.get("type") == "text":
+            data = json.loads(item["text"])
+            if data.get("ok"):
+                print(f"[OK] 文章创建成功！ID: {data['id']}, 标题: {data['title']}")
+            else:
+                print(f"[失败] {data}")
+    
+    # 验证：列出文章看看新文章在不在
+    print()
+    print("验证：重新获取文章列表...")
+    result2 = mcp_request(url, "tools/call", {"name": "list_articles", "arguments": {}})
+    content2 = result2.get("result", {}).get("content", [])
+    for item in content2:
+        if item.get("type") == "text":
+            articles = json.loads(item["text"])
+            print(f"  现在共有 {len(articles)} 篇文章")
+`nif __name__ == "__main__":
     if len(sys.argv) < 2 or sys.argv[1] in ("-h", "--help"):
         print(__doc__)
         sys.exit(0)
@@ -169,11 +202,11 @@ if __name__ == "__main__":
         list_tools(url)
     elif cmd == "call":
         if not tool:
-            print("❌ 请指定 --tool 参数")
+            print("[失败] 请指定 --tool 参数")
             sys.exit(1)
         call_tool(url, tool, params)
     elif cmd == "demo":
         demo(url)
     else:
-        print(f"❌ 未知命令: {cmd}")
+        print(f"[失败] 未知命令: {cmd}")
         print("可用命令: list, call, demo")
