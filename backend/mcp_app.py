@@ -9,13 +9,13 @@ import mcp_handler
 
 mcp_app = FastAPI(title="MCP Server")
 
-@mcp_app.post("")
+@mcp_app.post("/")
 async def mcp_endpoint(request: Request):
     body = await request.json()
     result = mcp_handler.handle_mcp_request(body)
     return JSONResponse(content=result)
 
-@mcp_app.get("")
+@mcp_app.get("/")
 def mcp_info():
     return {
         "server": "jingang-mcp",
