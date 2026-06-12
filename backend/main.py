@@ -18,6 +18,9 @@ import knowledge_search
 import ai_writer
 import scheduler
 import chatbot
+import backup_manager
+import agent_config
+import mcp_app
 
 app = FastAPI(title="金刚般若后台")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
@@ -36,7 +39,8 @@ def startup():
     except Exception as e:
         print(f'[备份] 自动恢复异常: {e}')
 
-app.mount("/admin", StaticFiles(directory=str(BASE_DIR / "admin"), html=True), name="admin")`napp.mount("/mcp", mcp_app.mcp_app, name="mcp")
+app.mount("/admin", StaticFiles(directory=str(BASE_DIR / "admin"), html=True), name="admin")
+app.mount("/mcp", mcp_app.mcp_app, name="mcp")
 
 class ArticleIn(BaseModel): title: str; summary: str; content: str
 class CommentIn(BaseModel): article_id: int; author: str; content: str
