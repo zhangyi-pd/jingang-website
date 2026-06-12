@@ -1,4 +1,4 @@
-﻿"""数据库管理模块"""
+"""数据库管理模块"""
 import sqlite3
 import os
 
@@ -12,6 +12,7 @@ def get_db():
     return conn
 
 import knowledge_search
+import agent_config
 
 def init_db():
     os.makedirs(DB_DIR, exist_ok=True)
